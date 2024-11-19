@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        .header {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #333;
+        }
+
+        .button-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #007BFF;
+            color: white;
+            transition: background-color 0.3s;
+        }
+
+        .btn:hover {
+            background-color: #0056b3;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .data-section {
+            margin-top: 30px;
+            width: 80%;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+<div class="header">
+    <h1>App Admin Page</h1>
+    <p>앱 관리자 페이지입니다.</p>
+</div>
+
+<div class="button-container">
+    <button class="btn" onclick="addProduct('Card')">Add Card</button>
+    <button class="btn" onclick="addProduct('Loan')">Add Loan</button>
+    <button class="btn" onclick="addProduct('Account')">Add Account</button>
+    <a class="btn" th:href="@{/userlists}">User List 보기</a>
+<!--    <a class="btn" th:href="@{/cards}">Card Types 보기</a>-->
+</div>
+
+<script>
+    function addProduct(productType) {
+        alert(`Adding a new ${productType} product.`);
+    }
+</script>
+</body>
+</html>
