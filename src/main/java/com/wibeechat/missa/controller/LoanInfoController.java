@@ -58,7 +58,7 @@ public class LoanInfoController {
     public String deleteLoan(@RequestParam(value = "loanId") String loanId, RedirectAttributes redirectAttributes) {
         try {
             loanInfoService.deleteLoanById(loanId);
-            redirectAttributes.addFlashAttribute("successMessage", "Loan deleted successfully.");
+            redirectAttributes.addFlashAttribute("successMessage", "대출상품이 성공적으로 삭제되었습니다!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Error deleting loan: " + e.getMessage());
         }
@@ -76,7 +76,7 @@ public class LoanInfoController {
     public String addLoan(@ModelAttribute LoanInfo loanInfo, RedirectAttributes redirectAttributes) {
         try {
                 loanInfoService.addLoan(loanInfo);
-            redirectAttributes.addFlashAttribute("successMessage", "Loan added successfully!");
+            redirectAttributes.addFlashAttribute("successMessage", "대출 상품이 성공적으로 추가되었습니다!");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Error adding loan: " + e.getMessage());
         }

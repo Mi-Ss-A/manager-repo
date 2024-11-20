@@ -87,9 +87,17 @@
 <!-- 성공 메시지 Alert -->
 <div th:if="${successMessage}" style="text-align: center; color: green; margin-bottom: 20px;">
     <script>
-        alert([[${successMessage}]]);
+        alert('[[${successMessage}]]');
     </script>
 </div>
+
+<!-- 실패 메시지 Alert -->
+<div th:if="${errorMessage}" style="text-align: center; color: red; margin-bottom: 20px;">
+    <script>
+        alert('[[${errorMessage}]]');
+    </script>
+</div>
+
 
 <div class="button-container">
     <a href="/admin" class="btn">Admin 홈으로 가기</a>

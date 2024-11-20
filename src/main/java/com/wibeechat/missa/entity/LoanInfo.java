@@ -1,7 +1,9 @@
 package com.wibeechat.missa.entity;
 
+
 import jakarta.persistence.*;
 import lombok.*;
+import java.util.UUID;
 
 @Entity
 @Table(name = "LOAN_INFO", schema = "WIBEE")
@@ -14,7 +16,7 @@ public class LoanInfo {
 
     @Id
     @Column(name = "LOAN_ID", nullable = false, length = 100)
-    private String loanId;
+    private String loanId; // UUID를 문자열로 저장
 
     @Column(name = "LOAN_TYPE", nullable = false, length = 30)
     private String loanType;
@@ -30,4 +32,11 @@ public class LoanInfo {
 
     @Column(name = "LOAN_LIMIT", nullable = false, length = 500)
     private String loanLimit;
+
+    @PrePersist
+    public void prePersist() {
+        if (this.loanId == null || this.loanId.isEmpty()) {
+            this.loanId = UUID.randomUUID().toString(); // UUID 자동 생성
+        }
+    }
 }

@@ -32,8 +32,9 @@ public class LoanInfoService {
     }
 
     public void addLoan(LoanInfo loanInfo) {
-        loanInfoRepository.save(loanInfo);
+        loanInfoRepository.save(loanInfo); // prePersist에서 UUID 자동 생성
     }
+
 }
 
 
