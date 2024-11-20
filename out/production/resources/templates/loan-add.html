@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>대출 상품 추가</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        form {
+            width: 50%;
+            margin: auto;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        .btn {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+<h1>대출 상품 추가</h1>
+<form th:action="@{/loans/add}" method="post">
+    <div class="form-group">
+        <label for="loanType">Loan Type</label>
+        <input type="text" id="loanType" name="loanType" th:value="${loanInfo.loanType}" required>
+    </div>
+    <div class="form-group">
+        <label for="loanName">Loan Name</label>
+        <input type="text" id="loanName" name="loanName" th:value="${loanInfo.loanName}" required>
+    </div>
+    <div class="form-group">
+        <label for="loanTarget">Loan Target</label>
+        <textarea id="loanTarget" name="loanTarget" th:text="${loanInfo.loanTarget}" required></textarea>
+    </div>
+    <div class="form-group">
+        <label for="loanLimit">Loan Limit</label>
+        <input type="text" id="loanLimit" name="loanLimit" th:value="${loanInfo.loanLimit}" required>
+    </div>
+    <button type="submit" class="btn">추가</button>
+</form>
+</body>
+</html>

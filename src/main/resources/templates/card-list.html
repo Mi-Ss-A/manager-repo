@@ -48,6 +48,19 @@
         th {
             background-color: #f4f4f4;
         }
+        .delete-btn {
+            padding: 5px 10px;
+            font-size: 14px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #FF4D4D;
+            color: white;
+            text-decoration: none;
+        }
+        .delete-btn:hover {
+            background-color: #cc0000;
+        }
         img.card-image {
             width: 100px;
             height: auto;
@@ -79,6 +92,7 @@
 
 <div class="button-container">
     <a href="/admin" class="btn">Admin 홈으로 가기</a>
+    <a href="/admin" class="btn">카드 추가하기</a>
 </div>
 
 <table>
@@ -101,6 +115,12 @@
         <td th:text="${card.cardType}"></td>
         <td th:text="${card.cardAnnualFee != null ? card.cardAnnualFee + ' USD' : 'Free'}"></td>
         <td th:text="${card.cardBenefit}"></td>
+        <td>
+            <form th:action="@{/loans/delete}" method="post" style="display:inline;">
+                <input type="hidden" th:name="cardCode" th:value="${card.cardCode}">
+                <button type="submit" class="delete-btn">삭제</button>
+            </form>
+        </td>
     </tr>
     </tbody>
 </table>

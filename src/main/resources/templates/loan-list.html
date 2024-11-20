@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Card List</title>
+    <title>모든 대출 상품 정보</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -56,15 +56,9 @@
             cursor: pointer;
             background-color: #FF4D4D;
             color: white;
-            text-decoration: none;
         }
         .delete-btn:hover {
             background-color: #cc0000;
-        }
-        img.card-image {
-            width: 100px;
-            height: auto;
-            border-radius: 5px;
         }
         .pagination {
             text-align: center;
@@ -88,37 +82,45 @@
     </style>
 </head>
 <body>
-<h1>Card List</h1>
+<h1>Loan List</h1>
+
+<!-- 성공 메시지 Alert -->
+<div th:if="${successMessage}" style="text-align: center; color: green; margin-bottom: 20px;">
+    <script>
+        alert([[${successMessage}]]);
+    </script>
+</div>
 
 <div class="button-container">
     <a href="/admin" class="btn">Admin 홈으로 가기</a>
-    <a href="/admin" class="btn">카드 추가하기</a>
+    <a href="/loans/add" class="btn">대출 상품 추가</a>
 </div>
 
 <table>
     <thead>
     <tr>
-        <th>Image</th>
-        <th>Card Name</th>
-        <th>Type</th>
-        <th>Annual Fee</th>
-        <th>Benefits</th>
+        <th>Index</th>
+        <th>Loan Type</th>
+        <th>Loan Name</th>
+        <th>Loan Target</th>
+        <th>Loan Limit</th>
+        <th>Actions</th>
     </tr>
     </thead>
     <tbody>
-    <tr th:if="${cards.empty}">
-        <td colspan="5">No cards available.</td>
+    <tr th:if="${loans.empty}">
+        <td colspan="6">No loans available.</td>
     </tr>
-    <tr th:each="card : ${cards}">
-        <td><img th:src="${card.cardImgUrl}" alt="Card Image" class="card-image"></td>
-        <td th:text="${card.cardName}"></td>
-        <td th:text="${card.cardType}"></td>
-        <td th:text="${card.cardAnnualFee != null ? card.cardAnnualFee + ' USD' : 'Free'}"></td>
-        <td th:text="${card.cardBenefit}"></td>
+    <tr th:each="loan, loopStat : ${loans}">
+        <td th:text="${currentPage != null && pageSize != null ? (currentPage * pageSize + loopStat.index + 1) : loopStat.index + 1}"></td>
+        <td th:text="${loan.loanType}"></td>
+        <td th:text="${loan.loanName}"></td>
+        <td th:text="${loan.loanTarget}"></td>
+        <td th:text="${loan.loanLimit}"></td>
         <td>
-            <form th:action="@{/loans/delete}" method="post" style="display:inline;">
-                <input type="hidden" th:name="cardCode" th:value="${card.cardCode}">
-                <button type="submit" class="delete-btn">삭제</button>
+            <form th:action="@{/loans/delete}" method="post" style="display:inline;" class="delete-form">
+                <input type="hidden" th:name="loanId" th:value="${loan.loanId}">
+                <button type="button" class="delete-btn" onclick="confirmDelete(this)">삭제</button>
             </form>
         </td>
     </tr>
@@ -126,13 +128,24 @@
 </table>
 
 <div class="pagination">
-    <a th:href="@{/cards(page=${currentPage - 1}, size=10)}" th:if="${currentPage > 0}">Previous</a>
+    <a th:href="@{/loans(page=${currentPage - 1}, size=${pageSize})}" th:if="${currentPage > 0}">Previous</a>
     <span th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
-            <a th:href="@{/cards(page=${i}, size=10)}"
-               th:text="${i + 1}"
-               th:classappend="${currentPage == i} ? 'active' : ''"></a>
-        </span>
-    <a th:href="@{/cards(page=${currentPage + 1}, size=10)}" th:if="${currentPage + 1 < totalPages}">Next</a>
+        <a th:href="@{/loans(page=${i}, size=${pageSize})}"
+           th:text="${i + 1}"
+           th:classappend="${currentPage == i} ? 'active' : ''"></a>
+    </span>
+    <a th:href="@{/loans(page=${currentPage + 1}, size=${pageSize})}" th:if="${currentPage + 1 < totalPages}">Next</a>
 </div>
+
+<script>
+    function confirmDelete(button) {
+        // Confirm 삭제 여부
+        const isConfirmed = confirm("정말 이 대출 상품을 삭제하시겠습니까?");
+        if (isConfirmed) {
+            // Form을 찾아서 submit
+            button.closest("form").submit();
+        }
+    }
+</script>
 </body>
 </html>
