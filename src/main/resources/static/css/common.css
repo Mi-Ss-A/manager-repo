@@ -1,0 +1,196 @@
+/* 전체 레이아웃 */
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #ffffff; /* 밝은 흰색 배경 */
+    color: #333333; /* 다크 텍스트 색상 */
+    margin: 0;
+    padding: 20px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* 제목 스타일 */
+h1 {
+    text-align: center;
+    color: #2c3e50; /* 진한 텍스트 */
+    margin-bottom: 20px;
+    font-size: 2.5em;
+    font-weight: bold;
+}
+
+/* 버튼 컨테이너 및 버튼 스타일 */
+.button-container {
+    display: flex;
+    flex-wrap: wrap; /* 버튼이 줄바꿈되도록 설정 */
+    gap: 15px; /* 버튼 간 간격 */
+    justify-content: space-evenly; /* 버튼 간격을 고르게 분배 */
+    width: 100%; /* 컨테이너 너비를 페이지 전체로 설정 */
+    padding: 20px 10px;
+    box-sizing: border-box;
+}
+
+.btn {
+    flex: 1 1 calc(25% - 15px); /* 넓은 화면에서는 한 줄에 4개 */
+    max-width: 220px; /* 버튼 최대 너비 */
+    text-align: center;
+    padding: 15px 20px;
+    font-size: 1.1em;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    background-color: #007bff;
+    color: white;
+    text-decoration: none;
+    transition: background-color 0.3s, transform 0.2s;
+}
+
+.btn:hover {
+    background-color: #0056b3;
+}
+
+.btn:active {
+    transform: scale(0.95);
+}
+
+/* 반응형 버튼 레이아웃 */
+@media (max-width: 1024px) {
+    .btn {
+        flex: 1 1 calc(33.33% - 15px); /* 중간 화면에서는 한 줄에 3개 */
+    }
+}
+
+@media (max-width: 768px) {
+    .btn {
+        flex: 1 1 calc(50% - 15px); /* 작은 화면에서는 한 줄에 2개 */
+    }
+}
+
+@media (max-width: 480px) {
+    .btn {
+        flex: 1 1 100%; /* 매우 작은 화면에서는 한 줄에 1개 */
+    }
+}
+
+/* 테이블 스타일 */
+table {
+    width: 90%;
+    margin: 20px auto;
+    border-collapse: collapse;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: #ffffff; /* 흰 배경 */
+    color: #333333; /* 텍스트 색상 */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* 부드러운 그림자 */
+}
+
+th, td {
+    border: 1px solid #e0e0e0; /* 연한 회색 경계선 */
+    padding: 12px 15px;
+    text-align: center;
+}
+
+th {
+    background-color: #f7f7f7; /* 연한 회색 헤더 */
+    color: #333333;
+    font-weight: bold;
+}
+
+/* 페이지네이션 스타일 */
+.pagination {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.pagination a {
+    padding: 8px 15px;
+    font-size: 0.9em;
+    font-weight: 600;
+    border: 1px solid #007bff;
+    border-radius: 5px;
+    text-decoration: none;
+    color: #007bff;
+    background-color: white;
+    transition: all 0.3s ease;
+}
+
+.pagination a:hover {
+    background-color: #007bff;
+    color: white;
+}
+
+.pagination a.active {
+    background-color: #0056b3;
+    color: white;
+    pointer-events: none;
+}
+
+.pagination a:active {
+    transform: scale(0.95);
+}
+
+/* 삭제 버튼 스타일 */
+.delete-btn {
+    padding: 8px 15px;
+    font-size: 0.9em;
+    font-weight: 600;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    background-color: #e74c3c;
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.delete-btn:hover {
+    background-color: #c0392b;
+}
+
+.delete-btn:active {
+    transform: scale(0.95);
+}
+
+/* 입력 필드 및 폼 요소 스타일 */
+input, select, textarea {
+    width: 100%;
+    padding: 12px;
+    font-size: 1em;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-sizing: border-box;
+    margin-top: 5px;
+    margin-bottom: 15px;
+    background-color: #f9f9f9;
+}
+
+input:focus, select:focus, textarea:focus {
+    border-color: #007bff;
+    outline: none;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+}
+
+/* 기본 버튼 스타일 */
+button.btn {
+    padding: 12px 20px;
+    font-size: 1em;
+    font-weight: 600;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+button.btn:hover {
+    background-color: #0056b3;
+}
+
+button.btn:active {
+    transform: scale(0.95);
+    background-color: #003f7f;
+}

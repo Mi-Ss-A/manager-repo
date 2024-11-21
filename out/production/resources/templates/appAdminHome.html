@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Page</title>
+    <link rel="stylesheet" href="/css/common.css">
+</head>
+<body>
+<div class="header">
+    <h1>Admin Dashboard</h1>
+    <p>관리자 전용 페이지에 오신 것을 환영합니다.</p>
+</div>
+
+<div class="button-container">
+    <a class="btn" th:href="@{/card/add}">➕ Add Card</a>
+    <a class="btn" th:href="@{/loans/add}">➕ Add Loan</a>
+    <a class="btn" th:href="@{/fund/add}">➕ Add Fund</a>
+    <a class="btn" th:href="@{/userlists}">👤 모든 유저 정보 보기</a>
+    <a class="btn" th:href="@{/cards}">💳 모든 카드 상품 보기</a>
+    <a class="btn" th:href="@{/loans}">💰 모든 대출 상품 보기</a>
+    <a class="btn" th:href="@{/funds}">🏦 모든 펀드 상품 보기</a>
+</div>
+
+<div class="footer">
+    <p>© 2024 Admin Dashboard | Powered by WibeeChat</p>
+</div>
+
+</body>
+</html>
