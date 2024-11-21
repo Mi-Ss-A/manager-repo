@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface CardRepository extends JpaRepository<CardInfo, String> {
+public interface CardInfoRepository extends JpaRepository<CardInfo, String> {
 
     @Query(value = """
             SELECT * FROM (

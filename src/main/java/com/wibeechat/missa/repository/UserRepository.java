@@ -17,4 +17,7 @@ public interface UserRepository extends JpaRepository<User, String> {
             ) WHERE rnum > :startRow
             """, nativeQuery = true)
     List<User> findUsersWithPagination(@Param("startRow") int startRow, @Param("endRow") int endRow);
+
+    @Query(value = "SELECT COUNT(*) FROM WIBEE.user_info", nativeQuery = true)
+    int countAllUsers();
 }

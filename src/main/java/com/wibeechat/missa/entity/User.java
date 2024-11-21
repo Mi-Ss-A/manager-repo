@@ -5,6 +5,7 @@ import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(schema = "WIBEE", name = "USER_INFO")
@@ -51,8 +52,9 @@ public class User {
     @Column(name = "USER_STATUS", length = 1)
     private UserStatus userStatus;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "USER_TYPE", length = 5, nullable = false)
-    private String userType;
+    private UserType userType;
 
     @PrePersist
     public void prePersist() {
@@ -61,6 +63,9 @@ public class User {
         }
         if (this.userRegistrationDate == null) {
             this.userRegistrationDate = LocalDateTime.now(); // 기본값 설정
+        }
+        if(this.userNo == null || this.userNo.isEmpty()){
+            this.userNo = UUID.randomUUID().toString();
         }
     }
 }
