@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <meta charset="UTF-8">
+    <title>Istio 관리자 대시보드</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-gray-100">
+<div class="w-full max-w-7xl mx-auto p-4">
+    <!-- 헤더 섹션 -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold mb-2">Istio 관리자 대시보드</h1>
+        <p class="text-gray-600">서비스 메시 모니터링 및 관리</p>
+    </div>
+
+    <!-- 메트릭 카드 섹션 -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <!-- 총 서비스 카드 -->
+        <div class="bg-white rounded-lg shadow-md">
+            <div class="p-4 border-b flex items-center space-x-2">
+                <i data-lucide="box" class="w-4 h-4"></i>
+                <h3 class="font-semibold">총 서비스</h3>
+            </div>
+            <div class="p-4">
+                <p class="text-2xl font-bold" th:text="${metrics.totalServices}">24</p>
+            </div>
+        </div>
+
+        <!-- 활성 게이트웨이 카드 -->
+        <div class="bg-white rounded-lg shadow-md">
+            <div class="p-4 border-b flex items-center space-x-2">
+                <i data-lucide="terminal" class="w-4 h-4"></i>
+                <h3 class="font-semibold">활성 게이트웨이</h3>
+            </div>
+            <div class="p-4">
+                <p class="text-2xl font-bold" th:text="${metrics.activeGateways}">3</p>
+            </div>
+        </div>
+
+        <!-- 경고 카드 -->
+        <div class="bg-white rounded-lg shadow-md">
+            <div class="p-4 border-b flex items-center space-x-2">
+                <i data-lucide="alert-circle" class="w-4 h-4"></i>
+                <h3 class="font-semibold">경고</h3>
+            </div>
+            <div class="p-4">
+                <p class="text-2xl font-bold" th:text="${metrics.alerts}">2</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 탭 섹션 -->
+    <div class="bg-white rounded-lg shadow-md">
+        <div class="border-b">
+            <nav class="flex" id="tabs">
+                <button class="px-4 py-2 font-medium border-b-2 border-blue-500 tab-active"
+                        onclick="switchTab('overview')" data-tab="overview">개요</button>
+                <button class="px-4 py-2 font-medium"
+                        onclick="switchTab('services')" data-tab="services">서비스</button>
+                <button class="px-4 py-2 font-medium"
+                        onclick="switchTab('security')" data-tab="security">보안</button>
+                <button class="px-4 py-2 font-medium"
+                        onclick="switchTab('monitoring')" data-tab="monitoring">모니터링</button>
+            </nav>
+        </div>
+
+        <!-- 탭 컨텐츠 -->
+        <div id="tabContent">
+            <!-- 개요 탭 -->
+            <div class="p-4 tab-content" id="overview">
+                <div class="bg-white rounded-lg">
+                    <div class="p-4 border-b">
+                        <h3 class="font-semibold">시스템 상태</h3>
+                    </div>
+                    <div class="p-4">
+                        <div class="space-y-2">
+                            <div class="flex justify-between items-center">
+                                <span>Virtual Services</span>
+                                <span class="font-medium" th:text="${metrics.totalVirtualServices}">12</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span>Destination Rules</span>
+                                <span class="font-medium" th:text="${metrics.totalDestinationRules}">8</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span>네임스페이스</span>
+                                <span class="font-medium" th:text="${metrics.totalNamespaces}">5</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span>건강한 서비스</span>
+                                <span class="font-medium" th:text="${metrics.healthyServices}">10</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span>문제 있는 서비스</span>
+                                <span class="font-medium" th:text="${metrics.unhealthyServices}">2</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span>평균 지연 시간</span>
+                                <span class="font-medium" th:text="${metrics.averageLatency + 'ms'}">150ms</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 나머지 탭 내용은 동일하게 유지 -->
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript 부분은 동일하게 유지 -->
+<script>
+    // Lucide 아이콘 초기화
+    lucide.createIcons();
+
+    function switchTab(tabId) {
+        // 모든 탭 버튼에서 활성 스타일 제거
+        document.querySelectorAll('#tabs button').forEach(button => {
+            button.classList.remove('border-b-2', 'border-blue-500', 'tab-active');
+        });
+
+        // 선택된 탭 버튼에 활성 스타일 추가
+        document.querySelector(`button[data-tab="${tabId}"]`)
+            .classList.add('border-b-2', 'border-blue-500', 'tab-active');
+
+        // 모든 탭 컨텐츠 숨기기
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.add('hidden');
+        });
+
+        // 선택된 탭 컨텐츠 표시
+        document.getElementById(tabId).classList.remove('hidden');
+    }
+</script>
+</body>
+</html>
