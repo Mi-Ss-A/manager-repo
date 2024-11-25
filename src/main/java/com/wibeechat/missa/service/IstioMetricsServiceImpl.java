@@ -1,6 +1,5 @@
 package com.wibeechat.missa.service;
 
-import com.wibeechat.missa.controller.IstioMetricsService;
 import com.wibeechat.missa.domain.IstioMetrics;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientBuilder;

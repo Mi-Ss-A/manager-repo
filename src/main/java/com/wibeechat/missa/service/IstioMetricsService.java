@@ -1,4 +1,4 @@
-package com.wibeechat.missa.controller;
+package com.wibeechat.missa.service;
 
 import com.wibeechat.missa.domain.IstioMetrics;
 
