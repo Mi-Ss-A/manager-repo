@@ -1,8 +1,11 @@
 package com.wibeechat.missa.controller;
 
+import com.wibeechat.missa.domain.IstioMetrics;
 import com.wibeechat.missa.entity.FundInfo;
 import com.wibeechat.missa.entity.User;
+import com.wibeechat.missa.service.IstioMetricsService;
 import com.wibeechat.missa.service.UserService;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +19,7 @@ import java.util.List;
 
 
 @Controller
+@RequiredArgsConstructor
 public class UserController {
 
     private static final Logger logger = LoggerFactory.getLogger(UserController.class);
@@ -23,12 +27,22 @@ public class UserController {
 
     @Autowired
     private UserService userService;
+    private final IstioMetricsService istioMetricsService;
 
 
     @GetMapping("/admin")
-    public String adminPage(Model model) {
-        return "appAdminHome";
+    public String dashboard(Model model) {
+        try {
+            IstioMetrics metrics = istioMetricsService.getIstioMetrics();
+            model.addAttribute("metrics", metrics);
+            model.addAttribute("error", null);
+        } catch (Exception e) {
+            model.addAttribute("metrics", new IstioMetrics());
+            model.addAttribute("error", "Failed to fetch Istio metrics: " + e.getMessage());
+        }
+        return "dashboard";
     }
+
 
     @GetMapping("/userlists")
     public String userLists(
