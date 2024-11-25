@@ -9,11 +9,6 @@ import io.fabric8.istio.api.networking.v1beta1.DestinationRule;
 import org.springframework.stereotype.Service;
 import io.fabric8.istio.api.networking.v1beta1.Gateway;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -24,6 +19,7 @@ public class IstioMetricsServiceImpl implements IstioMetricsService {
     public IstioMetricsServiceImpl() {
         this.kubernetesClient = new KubernetesClientBuilder().build();
     }
+
 
     @Override
     public IstioMetrics getIstioMetrics() {
@@ -45,11 +41,14 @@ public class IstioMetricsServiceImpl implements IstioMetricsService {
             ServiceHealthMetrics healthMetrics = collectServiceHealthMetrics();
 
             return IstioMetrics.builder()
+                    .totalServices(activeServices)
                     .totalVirtualServices(virtualServices)
                     .totalDestinationRules(destinationRules)
                     .totalGateways(gateways)
+                    .activeGateways(gateways)
                     .activeServices(activeServices)
                     .totalNamespaces(totalNamespaces)
+                    .alerts(healthMetrics.getUnhealthyCount())
                     .healthyServices(healthMetrics.getHealthyCount())
                     .unhealthyServices(healthMetrics.getUnhealthyCount())
                     .averageLatency(healthMetrics.getAverageLatency())
@@ -62,6 +61,7 @@ public class IstioMetricsServiceImpl implements IstioMetricsService {
             return IstioMetrics.createEmpty();
         }
     }
+
 
     private int countVirtualServices() {
         try {

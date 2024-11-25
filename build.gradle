@@ -26,6 +26,7 @@ configurations {
 repositories {
     mavenLocal()  // 로컬 Maven 저장소 추가
     mavenCentral()
+    maven { url 'https://storage.googleapis.com/istio-release/releases/1.18.0/maven/' }
 }
 
 dependencies {
@@ -54,6 +55,9 @@ dependencies {
     implementation 'io.micrometer:micrometer-registry-prometheus'
 
     runtimeOnly 'com.oracle.database.jdbc:ojdbc11'
+
+    implementation 'io.fabric8:kubernetes-client:6.8.1'
+    implementation 'io.fabric8:istio-client:6.8.1'
 }
 
 dependencyManagement {
