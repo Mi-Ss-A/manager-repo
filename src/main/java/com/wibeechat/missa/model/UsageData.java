@@ -7,6 +7,7 @@ import lombok.Setter;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -18,7 +19,7 @@ public class UsageData {
     private String object;
 
     @JsonProperty("data")
-    private List<UsageItem> data;
+    private List<UsageItem> data = new ArrayList<>(); // 기본값 설정
 
     @JsonIgnore // JSON 변환 시 무시
     private String date; // 날짜 필드 추가

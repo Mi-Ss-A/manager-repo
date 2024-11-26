@@ -17,6 +17,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -38,15 +39,26 @@ public class UserController {
     @GetMapping("/admin")
     public String adminPage(Model model) {
         try {
-            UsageData usageData = openAIService.getUsageData();
-            System.out.println("Controller -> Usage Data JSON: " + usageData); // 디버그용 로그
-            model.addAttribute("usageData", usageData);
+            List<UsageData> weeklyUsageData = openAIService.getWeeklyUsageData();
+            // null 체크 및 빈 리스트 처리
+            if (weeklyUsageData == null) {
+                weeklyUsageData = new ArrayList<>();
+            }
+
+            // 데이터 로깅
+            for (UsageData data : weeklyUsageData) {
+                if (data != null && data.getData() != null) {
+                    logger.info("Date: {}, Items: {}", data.getDate(), data.getData().size());
+                }
+            }
+
+            model.addAttribute("weeklyUsageData", weeklyUsageData);
 //            IstioMetrics metrics = istioMetricsService.getIstioMetrics();
 //            model.addAttribute("metrics", metrics);
 //            model.addAttribute("error", null);
         } catch (Exception e) {
             e.printStackTrace(); // 예외 출력
-            model.addAttribute("usageData", new UsageData()); //빈 객체 전달
+            model.addAttribute("weeklyUsageData", new ArrayList<>()); //빈 객체 전달
 //            model.addAttribute("metrics", new IstioMetrics());
             model.addAttribute("error", "Failed to fetch Istio metrics: " + e.getMessage());
         }

@@ -13,6 +13,8 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class OpenAIService {
@@ -96,21 +98,26 @@ public class OpenAIService {
         return getUsageData(currentDate);
     }
 
-    public List<UsageData> getWeeklyUsageData() throws Exception {
-        LocalDate today = LocalDate.now();
-        List<UsageData> weeklyUsageData = new ArrayList<>();
+        // getWeeklyUsageData 메서드에 로그 추가
+        public List<UsageData> getWeeklyUsageData() throws Exception {
+            LocalDate today = LocalDate.now();
+            List<UsageData> weeklyUsageData = new ArrayList<>();
 
-        // 최근 7일 데이터를 가져옵니다.
-        for (int i = 0; i < 7; i++) {
-            String dateString = today.minusDays(i).format(DateTimeFormatter.ISO_DATE);
-            try {
-                UsageData usageData = getUsageData(dateString); // 기존 메서드 재사용
-                usageData.setDate(dateString); // UsageData에 날짜 추가
-                weeklyUsageData.add(usageData);
-            } catch (Exception e) {
-                logger.error("Failed to fetch usage data for date: {}", dateString, e);
+            for (int i = 0; i < 7; i++) {
+                String dateString = today.minusDays(i).format(DateTimeFormatter.ISO_DATE);
+                try {
+                    UsageData usageData = getUsageData(dateString);
+                    if (usageData != null) {
+                        usageData.setDate(dateString);
+                        weeklyUsageData.add(usageData);
+                        logger.info("Successfully fetched data for {}: {} items",
+                                dateString,
+                                usageData.getData() != null ? usageData.getData().size() : 0);
+                    }
+                } catch (Exception e) {
+                    logger.error("Failed to fetch usage data for date: {}", dateString, e);
+                }
             }
+            return weeklyUsageData;
         }
-        return weeklyUsageData;
     }
-}

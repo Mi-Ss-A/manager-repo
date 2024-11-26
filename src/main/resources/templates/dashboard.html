@@ -15,6 +15,11 @@
     <!-- DataTables JS -->
     <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
 </head>
+<script>
+
+    const weeklyUsageData = /*[[${weeklyUsageData}]]*/ {};
+    console.log(weeklyUsageData);
+</script>
 <body class="bg-gray-100">
 <div class="w-full max-w-7xl mx-auto p-4">
     <!-- 상단 헤더 섹션 -->
@@ -27,13 +32,34 @@
 
     <!-- OpenAI 사용량 데이터 테이블 섹션 -->
     <div class="bg-white rounded-lg shadow-md p-6">
-        <h2 class="text-xl font-bold mb-4">OpenAI 사용량 데이터</h2>
+        <h2 class="text-xl font-bold mb-4">OpenAI 사용량 데이터 (최근 7일)</h2>
+
+        <!-- 총 예상 금액 섹션 -->
+        <div class="bg-gray-50 rounded-lg shadow-md p-6 mt-8">
+            <h3 class="text-lg font-bold mb-4">model 별 총 예상 금액</h3>
+            <div id="totalCostSection" class="grid grid-cols-2 gap-8 text-center">
+                <!-- GPT-3.5-turbo 블럭 -->
+                <div class="bg-gray-200 p-4 rounded-lg shadow-md">
+                    <div class="text-3xl font-bold text-green-700 bg-green-100">gpt-3.5-turbo</div>
+                    <div id="gptTokensTotal" class="text-2xl font-semibold text-gray-800 mt-4">0 토큰 = $0.00</div>
+                </div>
+                <!-- Ada 블럭 -->
+                <div class="bg-gray-200 p-4 rounded-lg shadow-md">
+                    <div class="text-3xl font-bold text-pink-700 bg-pink-100 p-2 rounded">text-embedding-ada-002-v2</div>
+                    <div id="adaTokensTotal" class="text-2xl font-semibold text-gray-800 mt-4">0 토큰 = $0.00</div>
+                </div>
+            </div>
+        </div>
+
+
+
+
         <div>
-            <table id="usageTable" class="display w-full">
+            <!-- 오늘 날짜 데이터 테이블 -->
+            <h3 class="text-lg font-bold">오늘의 데이터</h3>
+            <table id="todayUsageTable" class="display w-full mb-4" th:if="${weeklyUsageData != null and not #lists.isEmpty(weeklyUsageData)}">
                 <thead>
                 <tr>
-<!--                    <th>조직 ID</th>-->
-<!--                    <th>조직 이름</th>-->
                     <th>스냅샷 ID</th>
                     <th>요청 수</th>
                     <th>컨텍스트 토큰</th>
@@ -41,10 +67,7 @@
                 </tr>
                 </thead>
                 <tbody>
-                <!-- usageData.data를 Java 객체로 사용 -->
-                <tr th:each="item : ${usageData.data}" th:if="${usageData.data != null}">
-<!--                    <td th:text="${item.organizationId}">-</td>-->
-<!--                    <td th:text="${item.organizationName}">-</td>-->
+                <tr th:each="item : ${weeklyUsageData[0].data}" th:if="${weeklyUsageData[0].data != null}">
                     <td th:text="${item.snapshotId}">-</td>
                     <td th:text="${item.nRequests}">0</td>
                     <td th:text="${item.nContextTokensTotal}">0</td>
@@ -52,88 +75,121 @@
                 </tr>
                 </tbody>
             </table>
+
+            <!-- 버튼으로 나머지 데이터를 토글 -->
+            <button id="toggleButton" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700"
+                    th:if="${weeklyUsageData.size() > 1}">
+                지난 6일 데이터 보기
+            </button>
+
+            <div id="otherDaysContainer" class="hidden mt-4" th:if="${weeklyUsageData.size() > 1}">
+                <th:block th:each="usage, iterStat : ${weeklyUsageData}" th:if="${iterStat.index > 0 and usage.data != null and not #lists.isEmpty(usage.data)}">
+                    <h3 class="text-lg font-bold" th:text="'사용 날짜: ' + ${usage.date}">사용 날짜</h3>
+                    <table class="display w-full mb-4 otherUsageTable" id="otherUsageTable_${iterStat.index}">
+                        <thead>
+                        <tr>
+                            <th>스냅샷 ID</th>
+                            <th>요청 수</th>
+                            <th>컨텍스트 토큰</th>
+                            <th>생성된 토큰</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="item : ${usage.data}">
+                            <td th:text="${item.snapshotId}">-</td>
+                            <td th:text="${item.nRequests}">0</td>
+                            <td th:text="${item.nContextTokensTotal}">0</td>
+                            <td th:text="${item.nGeneratedTokensTotal}">0</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </th:block>
+            </div>
+
         </div>
-    </div>
 
 
-    <!--    &lt;!&ndash; 그리드 레이아웃: Istio 메트릭 + 관리자 기능 &ndash;&gt;-->
-<!--    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">-->
-<!--        &lt;!&ndash; 왼쪽: Istio 메트릭 섹션 &ndash;&gt;-->
-<!--        <div class="lg:col-span-2 space-y-6">-->
-<!--            &lt;!&ndash; 메트릭 카드 섹션 &ndash;&gt;-->
-<!--            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">-->
-<!--                &lt;!&ndash; 총 서비스 카드 &ndash;&gt;-->
-<!--                <div class="bg-white rounded-lg shadow-md">-->
-<!--                    <div class="p-4 border-b flex items-center space-x-2">-->
-<!--                        <i data-lucide="box" class="w-4 h-4"></i>-->
-<!--                        <h3 class="font-semibold">총 서비스</h3>-->
-<!--                    </div>-->
-<!--                    <div class="p-4">-->
-<!--                        <p class="text-2xl font-bold" th:text="${metrics.totalServices}">24</p>-->
-<!--                    </div>-->
-<!--                </div>-->
-
-<!--                &lt;!&ndash; 활성 게이트웨이 카드 &ndash;&gt;-->
-<!--                <div class="bg-white rounded-lg shadow-md">-->
-<!--                    <div class="p-4 border-b flex items-center space-x-2">-->
-<!--                        <i data-lucide="terminal" class="w-4 h-4"></i>-->
-<!--                        <h3 class="font-semibold">활성 게이트웨이</h3>-->
-<!--                    </div>-->
-<!--                    <div class="p-4">-->
-<!--                        <p class="text-2xl font-bold" th:text="${metrics.activeGateways}">3</p>-->
-<!--                    </div>-->
-<!--                </div>-->
-
-<!--                &lt;!&ndash; 경고 카드 &ndash;&gt;-->
-<!--                <div class="bg-white rounded-lg shadow-md">-->
-<!--                    <div class="p-4 border-b flex items-center space-x-2">-->
-<!--                        <i data-lucide="alert-circle" class="w-4 h-4"></i>-->
-<!--                        <h3 class="font-semibold">경고</h3>-->
-<!--                    </div>-->
-<!--                    <div class="p-4">-->
-<!--                        <p class="text-2xl font-bold" th:text="${metrics.alerts}">2</p>-->
-<!--                    </div>-->
-<!--                </div>-->
-<!--            </div>-->
-
-            <!-- OpenAI Usage Display -->
 
 
-<!--            &lt;!&ndash; 시스템 상태 섹션 &ndash;&gt;-->
-<!--            <div class="bg-white rounded-lg shadow-md">-->
-<!--                <div class="p-4 border-b">-->
-<!--                    <h3 class="font-semibold">시스템 상태</h3>-->
-<!--                </div>-->
-<!--                <div class="p-4">-->
-<!--                    <div class="space-y-2">-->
-<!--                        <div class="flex justify-between items-center">-->
-<!--                            <span>Virtual Services</span>-->
-<!--                            <span class="font-medium" th:text="${metrics.totalVirtualServices}">12</span>-->
-<!--                        </div>-->
-<!--                        <div class="flex justify-between items-center">-->
-<!--                            <span>Destination Rules</span>-->
-<!--                            <span class="font-medium" th:text="${metrics.totalDestinationRules}">8</span>-->
-<!--                        </div>-->
-<!--                        <div class="flex justify-between items-center">-->
-<!--                            <span>네임스페이스</span>-->
-<!--                            <span class="font-medium" th:text="${metrics.totalNamespaces}">5</span>-->
-<!--                        </div>-->
-<!--                        <div class="flex justify-between items-center">-->
-<!--                            <span>건강한 서비스</span>-->
-<!--                            <span class="font-medium" th:text="${metrics.healthyServices}">10</span>-->
-<!--                        </div>-->
-<!--                        <div class="flex justify-between items-center">-->
-<!--                            <span>문제 있는 서비스</span>-->
-<!--                            <span class="font-medium" th:text="${metrics.unhealthyServices}">2</span>-->
-<!--                        </div>-->
-<!--                        <div class="flex justify-between items-center">-->
-<!--                            <span>평균 지연 시간</span>-->
-<!--                            <span class="font-medium" th:text="${metrics.averageLatency + 'ms'}">150ms</span>-->
-<!--                        </div>-->
-<!--                    </div>-->
-<!--                </div>-->
-<!--            </div>-->
-<!--        </div>-->
+
+        <!--    &lt;!&ndash; 그리드 레이아웃: Istio 메트릭 + 관리자 기능 &ndash;&gt;-->
+        <!--    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">-->
+        <!--        &lt;!&ndash; 왼쪽: Istio 메트릭 섹션 &ndash;&gt;-->
+        <!--        <div class="lg:col-span-2 space-y-6">-->
+        <!--            &lt;!&ndash; 메트릭 카드 섹션 &ndash;&gt;-->
+        <!--            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">-->
+        <!--                &lt;!&ndash; 총 서비스 카드 &ndash;&gt;-->
+        <!--                <div class="bg-white rounded-lg shadow-md">-->
+        <!--                    <div class="p-4 border-b flex items-center space-x-2">-->
+        <!--                        <i data-lucide="box" class="w-4 h-4"></i>-->
+        <!--                        <h3 class="font-semibold">총 서비스</h3>-->
+        <!--                    </div>-->
+        <!--                    <div class="p-4">-->
+        <!--                        <p class="text-2xl font-bold" th:text="${metrics.totalServices}">24</p>-->
+        <!--                    </div>-->
+        <!--                </div>-->
+
+        <!--                &lt;!&ndash; 활성 게이트웨이 카드 &ndash;&gt;-->
+        <!--                <div class="bg-white rounded-lg shadow-md">-->
+        <!--                    <div class="p-4 border-b flex items-center space-x-2">-->
+        <!--                        <i data-lucide="terminal" class="w-4 h-4"></i>-->
+        <!--                        <h3 class="font-semibold">활성 게이트웨이</h3>-->
+        <!--                    </div>-->
+        <!--                    <div class="p-4">-->
+        <!--                        <p class="text-2xl font-bold" th:text="${metrics.activeGateways}">3</p>-->
+        <!--                    </div>-->
+        <!--                </div>-->
+
+        <!--                &lt;!&ndash; 경고 카드 &ndash;&gt;-->
+        <!--                <div class="bg-white rounded-lg shadow-md">-->
+        <!--                    <div class="p-4 border-b flex items-center space-x-2">-->
+        <!--                        <i data-lucide="alert-circle" class="w-4 h-4"></i>-->
+        <!--                        <h3 class="font-semibold">경고</h3>-->
+        <!--                    </div>-->
+        <!--                    <div class="p-4">-->
+        <!--                        <p class="text-2xl font-bold" th:text="${metrics.alerts}">2</p>-->
+        <!--                    </div>-->
+        <!--                </div>-->
+        <!--            </div>-->
+
+        <!-- OpenAI Usage Display -->
+
+
+        <!--            &lt;!&ndash; 시스템 상태 섹션 &ndash;&gt;-->
+        <!--            <div class="bg-white rounded-lg shadow-md">-->
+        <!--                <div class="p-4 border-b">-->
+        <!--                    <h3 class="font-semibold">시스템 상태</h3>-->
+        <!--                </div>-->
+        <!--                <div class="p-4">-->
+        <!--                    <div class="space-y-2">-->
+        <!--                        <div class="flex justify-between items-center">-->
+        <!--                            <span>Virtual Services</span>-->
+        <!--                            <span class="font-medium" th:text="${metrics.totalVirtualServices}">12</span>-->
+        <!--                        </div>-->
+        <!--                        <div class="flex justify-between items-center">-->
+        <!--                            <span>Destination Rules</span>-->
+        <!--                            <span class="font-medium" th:text="${metrics.totalDestinationRules}">8</span>-->
+        <!--                        </div>-->
+        <!--                        <div class="flex justify-between items-center">-->
+        <!--                            <span>네임스페이스</span>-->
+        <!--                            <span class="font-medium" th:text="${metrics.totalNamespaces}">5</span>-->
+        <!--                        </div>-->
+        <!--                        <div class="flex justify-between items-center">-->
+        <!--                            <span>건강한 서비스</span>-->
+        <!--                            <span class="font-medium" th:text="${metrics.healthyServices}">10</span>-->
+        <!--                        </div>-->
+        <!--                        <div class="flex justify-between items-center">-->
+        <!--                            <span>문제 있는 서비스</span>-->
+        <!--                            <span class="font-medium" th:text="${metrics.unhealthyServices}">2</span>-->
+        <!--                        </div>-->
+        <!--                        <div class="flex justify-between items-center">-->
+        <!--                            <span>평균 지연 시간</span>-->
+        <!--                            <span class="font-medium" th:text="${metrics.averageLatency + 'ms'}">150ms</span>-->
+        <!--                        </div>-->
+        <!--                    </div>-->
+        <!--                </div>-->
+        <!--            </div>-->
+        <!--        </div>-->
 
         <!-- 오른쪽: 관리자 기능 섹션 -->
         <div class="lg:col-span-1">
@@ -197,15 +253,133 @@
     </div>
 </div>
 
+
 <script>
     // Lucide 아이콘 초기화
     lucide.createIcons();
 
-     // DataTable 초기화
-    $(document).ready(function () {
-        $('#usageTable').DataTable();
+<!--    $(document).ready(function () {-->
+<!--        // DataTable 초기화-->
+<!--        $('#todayUsageTable').DataTable({ paging: true, searching: true });-->
+<!--        $('#otherUsageTable').DataTable({ paging: true, searching: true });-->
+
+<!--        // 토글 버튼 동작-->
+<!--        $('#toggleButton').click(function () {-->
+<!--            $('#otherDaysContainer').toggleClass('hidden');-->
+<!--            if ($('#otherDaysContainer').hasClass('hidden')) {-->
+<!--                $(this).text('지난 6일 데이터 보기');-->
+<!--            } else {-->
+<!--                $(this).text('지난 6일 데이터 숨기기');-->
+<!--            }-->
+<!--        });-->
+<!--    });-->
+document.addEventListener('DOMContentLoaded', function() {
+    // DataTables 초기화
+    $('#todayUsageTable').DataTable({
+        "language": {
+            "emptyTable": "데이터가 없습니다",
+            "lengthMenu": "페이지당 _MENU_ 개씩 보기",
+            "info": "현재 _START_ - _END_ / _TOTAL_건",
+            "infoEmpty": "데이터 없음",
+            "infoFiltered": "(_MAX_ 건의 데이터에서 필터링됨)",
+            "search": "검색: ",
+            "zeroRecords": "일치하는 데이터가 없습니다.",
+            "loadingRecords": "로딩중...",
+            "processing": "잠시만 기다려 주세요...",
+            "paginate": {
+                "next": "다음",
+                "previous": "이전"
+            }
+        }
+    });
+
+  // 지난 6일 데이터 테이블 초기화
+    $('.otherUsageTable').each(function() {
+        $(this).DataTable({
+            "language": {
+                "emptyTable": "데이터가 없습니다",
+                "lengthMenu": "페이지당 _MENU_ 개씩 보기",
+                "info": "현재 _START_ - _END_ / _TOTAL_건",
+                "infoEmpty": "데이터 없음",
+                "infoFiltered": "(_MAX_ 건의 데이터에서 필터링됨)",
+                "search": "검색: ",
+                "zeroRecords": "일치하는 데이터가 없습니다.",
+                "loadingRecords": "로딩중...",
+                "processing": "잠시만 기다려 주세요...",
+                "paginate": {
+                    "next": "다음",
+                    "previous": "이전"
+                }
+            }
+        });
+    });
+
+
+    // 토글 버튼 동작
+    const toggleButton = document.getElementById('toggleButton');
+    const otherDaysContainer = document.getElementById('otherDaysContainer');
+
+    if (toggleButton) {
+        toggleButton.addEventListener('click', function() {
+            if (otherDaysContainer.classList.contains('hidden')) {
+                otherDaysContainer.classList.remove('hidden');
+                toggleButton.textContent = '지난 6일 데이터 숨기기';
+            } else {
+                otherDaysContainer.classList.add('hidden');
+                toggleButton.textContent = '지난 6일 데이터 보기';
+            }
+
+            // DataTable 재조정 (열 너비 등이 제대로 계산되도록)
+            $($.fn.dataTable.tables(true)).DataTable().columns.adjust();
+        });
+    }
+});
+
+</script>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    const accountData = /*[[${weeklyUsageData}]]*/ [];
+    /*]]>*/
+
+    console.log("javaScript -> ",accountData[0]);
+      // 모델별로 총 토큰 수 계산
+        let gptTokensTotal = 0;
+        let adaTokensTotal = 0;
+
+        accountData.forEach(usage => {
+            if (usage.data) {
+                usage.data.forEach(item => {
+                    if (item.snapshot_id === 'gpt-3.5-turbo-0125') {
+                        gptTokensTotal += item.n_context_tokens_total + item.n_generated_tokens_total;
+                    } else if (item.snapshot_id === 'text-embedding-ada-002-v2') {
+                        adaTokensTotal += item.n_context_tokens_total + item.n_generated_tokens_total;
+                    }
+                });
+            }
+        });
+
+        // 각 모델별 총 예상 금액 계산
+        const gptCost = ((gptTokensTotal * 3) / 1000000) + ((gptTokensTotal * 6) / 1000000);
+        const adaCost = (adaTokensTotal * 0.1) / 1000000;
+
+        console.log("gptCost",gptCost);
+        console.log("gptToken 수 -> ",gptTokensTotal);
+
+        console.log("adaCost",adaCost);
+        console.log("adaToken 수 -> ",adaTokensTotal);
+
+        // 결과 표시
+      document.addEventListener('DOMContentLoaded', function() {
+        const gptElement = document.getElementById('gptTokensTotal');
+        const adaElement = document.getElementById('adaTokensTotal');
+
+        if (gptElement && gptTokensTotal > 0) {
+            gptElement.innerHTML = `${gptTokensTotal} tokens<br>$${gptCost.toFixed(2)}`;
+        }
+        if (adaElement && adaTokensTotal > 0) {
+            adaElement.innerHTML = `${adaTokensTotal} tokens<br>$${adaCost.toFixed(2)}`;
+        }
     });
 </script>
-
 </body>
 </html>
