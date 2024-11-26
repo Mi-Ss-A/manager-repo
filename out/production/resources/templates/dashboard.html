@@ -36,7 +36,7 @@
 
         <!-- 총 예상 금액 섹션 -->
         <div class="bg-gray-50 rounded-lg shadow-md p-6 mt-8">
-            <h3 class="text-lg font-bold mb-4">총 예상 금액</h3>
+            <h3 class="text-lg font-bold mb-4">model 별 총 예상 금액</h3>
             <div id="totalCostSection" class="grid grid-cols-2 gap-8 text-center">
                 <!-- GPT-3.5-turbo 블럭 -->
                 <div class="bg-gray-200 p-4 rounded-lg shadow-md">
@@ -112,84 +112,81 @@
 
 
 
-        <!--    &lt;!&ndash; 그리드 레이아웃: Istio 메트릭 + 관리자 기능 &ndash;&gt;-->
-        <!--    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">-->
-        <!--        &lt;!&ndash; 왼쪽: Istio 메트릭 섹션 &ndash;&gt;-->
-        <!--        <div class="lg:col-span-2 space-y-6">-->
-        <!--            &lt;!&ndash; 메트릭 카드 섹션 &ndash;&gt;-->
-        <!--            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">-->
-        <!--                &lt;!&ndash; 총 서비스 카드 &ndash;&gt;-->
-        <!--                <div class="bg-white rounded-lg shadow-md">-->
-        <!--                    <div class="p-4 border-b flex items-center space-x-2">-->
-        <!--                        <i data-lucide="box" class="w-4 h-4"></i>-->
-        <!--                        <h3 class="font-semibold">총 서비스</h3>-->
-        <!--                    </div>-->
-        <!--                    <div class="p-4">-->
-        <!--                        <p class="text-2xl font-bold" th:text="${metrics.totalServices}">24</p>-->
-        <!--                    </div>-->
-        <!--                </div>-->
+            <!-- 그리드 레이아웃: Istio 메트릭 + 관리자 기능 -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- 왼쪽: Istio 메트릭 섹션 -->
+                <div class="lg:col-span-2 space-y-6">
+                    <!-- 메트릭 카드 섹션 -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <!-- 총 서비스 카드 -->
+                        <div class="bg-white rounded-lg shadow-md">
+                            <div class="p-4 border-b flex items-center space-x-2">
+                                <i data-lucide="box" class="w-4 h-4"></i>
+                                <h3 class="font-semibold">총 서비스</h3>
+                            </div>
+                            <div class="p-4">
+                                <p class="text-2xl font-bold" th:text="${metrics.totalServices}">24</p>
+                            </div>
+                        </div>
 
-        <!--                &lt;!&ndash; 활성 게이트웨이 카드 &ndash;&gt;-->
-        <!--                <div class="bg-white rounded-lg shadow-md">-->
-        <!--                    <div class="p-4 border-b flex items-center space-x-2">-->
-        <!--                        <i data-lucide="terminal" class="w-4 h-4"></i>-->
-        <!--                        <h3 class="font-semibold">활성 게이트웨이</h3>-->
-        <!--                    </div>-->
-        <!--                    <div class="p-4">-->
-        <!--                        <p class="text-2xl font-bold" th:text="${metrics.activeGateways}">3</p>-->
-        <!--                    </div>-->
-        <!--                </div>-->
+<!--                         활성 게이트웨이 카드 -->
+                        <div class="bg-white rounded-lg shadow-md">
+                            <div class="p-4 border-b flex items-center space-x-2">
+                                <i data-lucide="terminal" class="w-4 h-4"></i>
+                                <h3 class="font-semibold">활성 게이트웨이</h3>
+                            </div>
+                            <div class="p-4">
+                                <p class="text-2xl font-bold" th:text="${metrics.activeGateways}">3</p>
+                            </div>
+                        </div>
 
-        <!--                &lt;!&ndash; 경고 카드 &ndash;&gt;-->
-        <!--                <div class="bg-white rounded-lg shadow-md">-->
-        <!--                    <div class="p-4 border-b flex items-center space-x-2">-->
-        <!--                        <i data-lucide="alert-circle" class="w-4 h-4"></i>-->
-        <!--                        <h3 class="font-semibold">경고</h3>-->
-        <!--                    </div>-->
-        <!--                    <div class="p-4">-->
-        <!--                        <p class="text-2xl font-bold" th:text="${metrics.alerts}">2</p>-->
-        <!--                    </div>-->
-        <!--                </div>-->
-        <!--            </div>-->
+                        <!-- 경고 카드 -->
 
-        <!-- OpenAI Usage Display -->
-
-
-        <!--            &lt;!&ndash; 시스템 상태 섹션 &ndash;&gt;-->
-        <!--            <div class="bg-white rounded-lg shadow-md">-->
-        <!--                <div class="p-4 border-b">-->
-        <!--                    <h3 class="font-semibold">시스템 상태</h3>-->
-        <!--                </div>-->
-        <!--                <div class="p-4">-->
-        <!--                    <div class="space-y-2">-->
-        <!--                        <div class="flex justify-between items-center">-->
-        <!--                            <span>Virtual Services</span>-->
-        <!--                            <span class="font-medium" th:text="${metrics.totalVirtualServices}">12</span>-->
-        <!--                        </div>-->
-        <!--                        <div class="flex justify-between items-center">-->
-        <!--                            <span>Destination Rules</span>-->
-        <!--                            <span class="font-medium" th:text="${metrics.totalDestinationRules}">8</span>-->
-        <!--                        </div>-->
-        <!--                        <div class="flex justify-between items-center">-->
-        <!--                            <span>네임스페이스</span>-->
-        <!--                            <span class="font-medium" th:text="${metrics.totalNamespaces}">5</span>-->
-        <!--                        </div>-->
-        <!--                        <div class="flex justify-between items-center">-->
-        <!--                            <span>건강한 서비스</span>-->
-        <!--                            <span class="font-medium" th:text="${metrics.healthyServices}">10</span>-->
-        <!--                        </div>-->
-        <!--                        <div class="flex justify-between items-center">-->
-        <!--                            <span>문제 있는 서비스</span>-->
-        <!--                            <span class="font-medium" th:text="${metrics.unhealthyServices}">2</span>-->
-        <!--                        </div>-->
-        <!--                        <div class="flex justify-between items-center">-->
-        <!--                            <span>평균 지연 시간</span>-->
-        <!--                            <span class="font-medium" th:text="${metrics.averageLatency + 'ms'}">150ms</span>-->
-        <!--                        </div>-->
-        <!--                    </div>-->
-        <!--                </div>-->
-        <!--            </div>-->
-        <!--        </div>-->
+    <div class="bg-white rounded-lg shadow-md">
+        <div class="p-4 border-b flex items-center space-x-2">
+            <i data-lucide="alert-circle" class="w-4 h-4"></i>
+            <h3 class="font-semibold">경고</h3>
+        </div>
+        <div class="p-4">
+            <p class="text-2xl font-bold" th:text="${metrics.alerts}">2</p>
+        </div>
+    </div>
+</div>
+                    <!-- 시스템 상태 섹션 -->
+                    <div class="bg-white rounded-lg shadow-md">
+                        <div class="p-4 border-b">
+                            <h3 class="font-semibold">시스템 상태</h3>
+                        </div>
+                        <div class="p-4">
+                            <div class="space-y-2">
+                                <div class="flex justify-between items-center">
+                                    <span>Virtual Services</span>
+                                    <span class="font-medium" th:text="${metrics.totalVirtualServices}">12</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span>Destination Rules</span>
+                                    <span class="font-medium" th:text="${metrics.totalDestinationRules}">8</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span>네임스페이스</span>
+                                    <span class="font-medium" th:text="${metrics.totalNamespaces}">5</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span>건강한 서비스</span>
+                                    <span class="font-medium" th:text="${metrics.healthyServices}">10</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span>문제 있는 서비스</span>
+                                    <span class="font-medium" th:text="${metrics.unhealthyServices}">2</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span>평균 지연 시간</span>
+                                    <span class="font-medium" th:text="${metrics.averageLatency + 'ms'}">150ms</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
         <!-- 오른쪽: 관리자 기능 섹션 -->
         <div class="lg:col-span-1">
@@ -248,31 +245,14 @@
     <div class="mt-8 text-center text-gray-600">
         <p>© 2024 통합 관리자 대시보드 | Powered by WibeeChat</p>
     </div>
-    <div class="mt-2 text-center">
-        <a th:href="@{/logout}" class="text-blue-500 hover:underline">Logout</a>
-    </div>
 </div>
-
+</div>
+</div>
 
 <script>
     // Lucide 아이콘 초기화
     lucide.createIcons();
 
-<!--    $(document).ready(function () {-->
-<!--        // DataTable 초기화-->
-<!--        $('#todayUsageTable').DataTable({ paging: true, searching: true });-->
-<!--        $('#otherUsageTable').DataTable({ paging: true, searching: true });-->
-
-<!--        // 토글 버튼 동작-->
-<!--        $('#toggleButton').click(function () {-->
-<!--            $('#otherDaysContainer').toggleClass('hidden');-->
-<!--            if ($('#otherDaysContainer').hasClass('hidden')) {-->
-<!--                $(this).text('지난 6일 데이터 보기');-->
-<!--            } else {-->
-<!--                $(this).text('지난 6일 데이터 숨기기');-->
-<!--            }-->
-<!--        });-->
-<!--    });-->
 document.addEventListener('DOMContentLoaded', function() {
     // DataTables 초기화
     $('#todayUsageTable').DataTable({

@@ -53,13 +53,13 @@ public class UserController {
             }
 
             model.addAttribute("weeklyUsageData", weeklyUsageData);
-//            IstioMetrics metrics = istioMetricsService.getIstioMetrics();
-//            model.addAttribute("metrics", metrics);
-//            model.addAttribute("error", null);
+            IstioMetrics metrics = istioMetricsService.getIstioMetrics();
+            model.addAttribute("metrics", metrics);
+            model.addAttribute("error", null);
         } catch (Exception e) {
             e.printStackTrace(); // 예외 출력
             model.addAttribute("weeklyUsageData", new ArrayList<>()); //빈 객체 전달
-//            model.addAttribute("metrics", new IstioMetrics());
+            model.addAttribute("metrics", new IstioMetrics());
             model.addAttribute("error", "Failed to fetch Istio metrics: " + e.getMessage());
         }
         return "dashboard";
