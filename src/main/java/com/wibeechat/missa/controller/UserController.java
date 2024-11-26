@@ -1,9 +1,11 @@
 package com.wibeechat.missa.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wibeechat.missa.domain.IstioMetrics;
-import com.wibeechat.missa.entity.FundInfo;
 import com.wibeechat.missa.entity.User;
+import com.wibeechat.missa.model.UsageData;
 import com.wibeechat.missa.service.IstioMetricsService;
+import com.wibeechat.missa.service.OpenAIService;
 import com.wibeechat.missa.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -15,6 +17,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -24,19 +27,38 @@ public class UserController {
 
     private static final Logger logger = LoggerFactory.getLogger(UserController.class);
 
-
-    @Autowired
-    private UserService userService;
+    private final OpenAIService openAIService;
+    private final ObjectMapper objectMapper;
     private final IstioMetricsService istioMetricsService;
+    private final UserService userService;
+
+
+
 
 
     @GetMapping("/admin")
-    public String dashboard(Model model) {
+    public String adminPage(Model model) {
         try {
+            List<UsageData> weeklyUsageData = openAIService.getWeeklyUsageData();
+            // null 체크 및 빈 리스트 처리
+            if (weeklyUsageData == null) {
+                weeklyUsageData = new ArrayList<>();
+            }
+
+            // 데이터 로깅
+            for (UsageData data : weeklyUsageData) {
+                if (data != null && data.getData() != null) {
+                    logger.info("Date: {}, Items: {}", data.getDate(), data.getData().size());
+                }
+            }
+
+            model.addAttribute("weeklyUsageData", weeklyUsageData);
             IstioMetrics metrics = istioMetricsService.getIstioMetrics();
             model.addAttribute("metrics", metrics);
             model.addAttribute("error", null);
         } catch (Exception e) {
+            e.printStackTrace(); // 예외 출력
+            model.addAttribute("weeklyUsageData", new ArrayList<>()); //빈 객체 전달
             model.addAttribute("metrics", new IstioMetrics());
             model.addAttribute("error", "Failed to fetch Istio metrics: " + e.getMessage());
         }
