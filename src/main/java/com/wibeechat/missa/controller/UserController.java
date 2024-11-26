@@ -1,9 +1,11 @@
 package com.wibeechat.missa.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wibeechat.missa.domain.IstioMetrics;
-import com.wibeechat.missa.entity.FundInfo;
 import com.wibeechat.missa.entity.User;
+import com.wibeechat.missa.model.UsageData;
 import com.wibeechat.missa.service.IstioMetricsService;
+import com.wibeechat.missa.service.OpenAIService;
 import com.wibeechat.missa.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -24,20 +26,28 @@ public class UserController {
 
     private static final Logger logger = LoggerFactory.getLogger(UserController.class);
 
-
-    @Autowired
-    private UserService userService;
+    private final OpenAIService openAIService;
+    private final ObjectMapper objectMapper;
     private final IstioMetricsService istioMetricsService;
+    private final UserService userService;
+
+
+
 
 
     @GetMapping("/admin")
-    public String dashboard(Model model) {
+    public String adminPage(Model model) {
         try {
-            IstioMetrics metrics = istioMetricsService.getIstioMetrics();
-            model.addAttribute("metrics", metrics);
-            model.addAttribute("error", null);
+            UsageData usageData = openAIService.getUsageData();
+            System.out.println("Controller -> Usage Data JSON: " + usageData); // 디버그용 로그
+            model.addAttribute("usageData", usageData);
+//            IstioMetrics metrics = istioMetricsService.getIstioMetrics();
+//            model.addAttribute("metrics", metrics);
+//            model.addAttribute("error", null);
         } catch (Exception e) {
-            model.addAttribute("metrics", new IstioMetrics());
+            e.printStackTrace(); // 예외 출력
+            model.addAttribute("usageData", new UsageData()); //빈 객체 전달
+//            model.addAttribute("metrics", new IstioMetrics());
             model.addAttribute("error", "Failed to fetch Istio metrics: " + e.getMessage());
         }
         return "dashboard";
