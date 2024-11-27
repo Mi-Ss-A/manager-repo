@@ -1,5 +1,21 @@
 package com.wibeechat.missa.controller;
 
+import java.security.Principal;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wibeechat.missa.domain.IstioMetrics;
 import com.wibeechat.missa.entity.User;
@@ -7,18 +23,8 @@ import com.wibeechat.missa.model.UsageData;
 import com.wibeechat.missa.service.IstioMetricsService;
 import com.wibeechat.missa.service.OpenAIService;
 import com.wibeechat.missa.service.UserService;
-import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.ArrayList;
-import java.util.List;
+import lombok.RequiredArgsConstructor;
 
 
 @Controller
@@ -37,7 +43,7 @@ public class UserController {
 
 
     @GetMapping("/admin")
-    public String adminPage(Model model) {
+    public String adminPage(Model model, Principal principal) {
         try {
             List<UsageData> weeklyUsageData = openAIService.getWeeklyUsageData();
             // null 체크 및 빈 리스트 처리
@@ -56,6 +62,9 @@ public class UserController {
             IstioMetrics metrics = istioMetricsService.getIstioMetrics();
             model.addAttribute("metrics", metrics);
             model.addAttribute("error", null);
+
+            // 현재 사용자 이름
+            model.addAttribute("username", principal.getName());
         } catch (Exception e) {
             e.printStackTrace(); // 예외 출력
             model.addAttribute("weeklyUsageData", new ArrayList<>()); //빈 객체 전달
