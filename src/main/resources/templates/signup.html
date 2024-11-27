@@ -2,14 +2,14 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Admin Login</title>
+    <title>Admin Sign Up</title>
     <link rel="stylesheet" href="/css/common.css">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
 <body>
 <div class="container mt-5">
-    <h2>Admin Login</h2>
-    <form th:action="@{/manual_login}" method="post">
+    <h2>Admin Sign Up</h2>
+    <form th:action="@{/signup}" method="post">
         <div class="form-group">
             <label for="username">Username:</label>
             <input type="text" id="username" name="username" class="form-control" required />
@@ -18,17 +18,19 @@
             <label for="password">Password:</label>
             <input type="password" id="password" name="password" class="form-control" required />
         </div>
+        <div class="form-group">
+            <label for="confirmPassword">Confirm Password:</label>
+            <input type="password" id="confirmPassword" name="confirmPassword" class="form-control" required />
+        </div>
+        <!-- 에러 메시지 표시 -->
+        <div th:if="${errorMessage}" class="alert alert-danger mt-3" role="alert">
+            <p th:text="${errorMessage}"></p>
+        </div>
         <div class="button-group">
-            <button type="submit" class="btn btn-primary">Login</button>
-            <a th:href="@{/signup}" class="btn btn-gray btn-secondary">Sign Up</a>
+            <button type="submit" class="btn btn-primary">Sign Up</button>
+            <a th:href="@{/login}" class="btn btn-gray btn-secondary">Back to Login</a>
         </div>
     </form>
-    <div th:if="${errorMessage}" class="alert alert-danger mt-3" role="alert">
-        <p th:text="${errorMessage}"></p>
-    </div>
-    <div th:if="${logoutMessage}" class="alert alert-success mt-3" role="alert">
-        <p th:text="${logoutMessage}"></p>
-    </div>
 </div>
 </body>
 </html>

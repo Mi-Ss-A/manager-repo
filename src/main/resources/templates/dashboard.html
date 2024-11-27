@@ -26,8 +26,11 @@
     <div class="mb-8 flex justify-between items-center">
         <div>
             <h1 class="text-3xl font-bold mb-2">통합 관리자 대시보드</h1>
-            <p class="text-gray-600">서비스 메시 모니터링 및 상품 관리</p>
+            <p class="text-gray-600">서비스 메시 모니터링 및 상품 관리 &#40;<span th:text="${username}">User</span>&#41;</p>
         </div>
+        <form th:action="@{/logout}" method="post">
+            <button type="submit" class="btn btn-danger">Logout</button>
+        </form>
     </div>
 
     <!-- OpenAI 사용량 데이터 테이블 섹션 -->
