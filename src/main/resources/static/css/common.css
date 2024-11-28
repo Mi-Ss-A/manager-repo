@@ -174,7 +174,7 @@ input:focus, select:focus, textarea:focus {
 }
 
 /* 기본 버튼 스타일 */
-button.btn {
+button.btn, a.btn {
     padding: 12px 20px;
     font-size: 1em;
     font-weight: 600;
@@ -194,3 +194,25 @@ button.btn:active {
     transform: scale(0.95);
     background-color: #003f7f;
 }
+
+/* 버튼들을 한 줄에 정렬하기 위한 스타일 */
+.button-group {
+    display: flex;
+    /* justify-content: space-between; 버튼 사이를 균등하게 배치 */
+    gap: 10px; /* 버튼 간 간격 */
+}
+.button-group .btn {
+    flex: 1; /* 버튼 크기를 균등하게 맞춤 */
+}
+
+.btn-gray{
+    background-color: #b5b5b5 !important;
+}
+
+.btn-gray:hover{
+    background-color: #979797 !important;
+}
+
+/* .btn-gray:active{
+    background-color: #898989 !important;
+} */

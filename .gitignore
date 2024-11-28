@@ -29,3 +29,5 @@ gradle
 gradlew.bat
 build/*
 
+.env
+.vscode
