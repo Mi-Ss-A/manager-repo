@@ -15,6 +15,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.Arrays;
 import java.util.List;
 
 
@@ -29,12 +30,21 @@ public class UserController {
     private UserService userService;
     private final IstioMetricsService istioMetricsService;
 
+    private static final List<String> SERVICE_NAMES = Arrays.asList(
+            "wibee-user-server-service",
+            "wibee-ai-server-service",
+            "wibee-config-server-service",
+            "wibee-front-end-service"
+    );
+
 
     @GetMapping("/admin")
     public String dashboard(Model model) {
         try {
             IstioMetrics metrics = istioMetricsService.getIstioMetrics();
             model.addAttribute("metrics", metrics);
+            model.addAttribute("SERVICE_NAMES", SERVICE_NAMES);
+            model.addAttribute("metricsistio", istioMetricsService.getAllMetrics());
             model.addAttribute("error", null);
         } catch (Exception e) {
             model.addAttribute("metrics", new IstioMetrics());
