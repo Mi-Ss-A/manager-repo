@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.Arrays;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wibeechat.missa.domain.IstioMetrics;
 import com.wibeechat.missa.entity.User;
@@ -41,6 +42,13 @@ public class UserController {
 
 
 
+    private static final List<String> SERVICE_NAMES = Arrays.asList(
+            "wibee-user-server-service",
+            "wibee-ai-server-service",
+            "wibee-config-server-service",
+            "wibee-front-end-service"
+    );
+
 
     @GetMapping("/admin")
     public String adminPage(Model model, Principal principal) {
@@ -61,6 +69,8 @@ public class UserController {
             model.addAttribute("weeklyUsageData", weeklyUsageData);
             IstioMetrics metrics = istioMetricsService.getIstioMetrics();
             model.addAttribute("metrics", metrics);
+            model.addAttribute("SERVICE_NAMES", SERVICE_NAMES);
+            model.addAttribute("metricsistio", istioMetricsService.getAllMetrics());
             model.addAttribute("error", null);
 
             // 현재 사용자 이름
