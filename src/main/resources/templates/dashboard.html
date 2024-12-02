@@ -6,12 +6,14 @@
     <title>통합 관리자 대시보드</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>ㄴ
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- DataTables 기본 CSS -->
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <!-- DataTables JS -->
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
 </head>
 <script>
@@ -188,6 +190,91 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- 시간별 접속량 및 파드 자동화 관리 섹션 -->
+                    <div class="bg-white rounded-lg shadow-md mt-6">
+                        <div class="p-4 border-b">
+                            <h3 class="font-semibold">트래픽 모니터링 및 파드 자동화</h3>
+                        </div>
+                        <div class="p-4 space-y-6">
+                            <!-- 시간별 접속량 그래프 -->
+                            <div class="mb-6">
+                                <h4 class="text-lg font-medium mb-3">시간별 사용자 접속량</h4>
+                                <div class="h-64 bg-gray-50 rounded-lg p-4">
+                                    <canvas id="trafficChart"></canvas>
+                                </div>
+                            </div>
+
+                            <!-- 파드 자동 스케일링 설정 -->
+                            <div class="border-t pt-4">
+                                <h4 class="text-lg font-medium mb-3">파드 자동화 설정</h4>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <!-- 자동 스케일링 규칙 -->
+                                    <div class="bg-gray-50 p-4 rounded-lg">
+                                        <h5 class="font-medium mb-2">현재 스케일링 상태</h5>
+                                        <div class="space-y-2">
+                                            <div class="flex justify-between">
+                                                <span>최소 파드 수:</span>
+                                                <span class="font-bold" th:text="${metrics.minPods}">2</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span>최대 파드 수:</span>
+                                                <span class="font-bold" th:text="${metrics.maxPods}">10</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span>현재 파드 수:</span>
+                                                <span class="font-bold" th:text="${metrics.currentPods}">4</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- 스케일링 규칙 설정 -->
+                                    <div class="bg-gray-50 p-4 rounded-lg">
+                                        <h5 class="font-medium mb-2">스케일링 규칙 설정</h5>
+                                        <form class="space-y-3">
+                                            <div>
+                                                <label class="block text-sm">CPU 임계값 (%)</label>
+                                                <input type="number" class="w-full p-2 border rounded"
+                                                       th:value="${metrics.cpuThreshold}" min="0" max="100">
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm">메모리 임계값 (%)</label>
+                                                <input type="number" class="w-full p-2 border rounded"
+                                                       th:value="${metrics.memoryThreshold}" min="0" max="100">
+                                            </div>
+                                            <button type="submit" class="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
+                                                설정 저장
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 자동화 로그 -->
+                            <div class="border-t pt-4">
+                                <h4 class="text-lg font-medium mb-3">자동화 로그</h4>
+                                <div class="bg-gray-50 p-4 rounded-lg h-48 overflow-y-auto">
+                                    <table class="w-full">
+                                        <thead>
+                                        <tr class="text-left">
+                                            <th class="pb-2">시간</th>
+                                            <th class="pb-2">이벤트</th>
+                                            <th class="pb-2">상태</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr th:each="log : ${automationLogs}">
+                                            <td class="py-1" th:text="${log.timestamp}">2024-11-29 14:30:00</td>
+                                            <td class="py-1" th:text="${log.event}">Scale Up 트리거</td>
+                                            <td class="py-1" th:text="${log.status}">성공</td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
 
         <!-- 오른쪽: 관리자 기능 섹션 -->
@@ -483,6 +570,32 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         if (adaElement && adaTokensTotal > 0) {
             adaElement.innerHTML = `${adaTokensTotal} tokens<br>$${adaCost.toFixed(2)}`;
+        }
+    });
+
+    // 트래픽 차트 초기화
+    const trafficCtx = document.getElementById('trafficChart').getContext('2d');
+    new Chart(trafficCtx, {
+        type: 'line',
+        data: {
+            labels: ['00:00', '02:00', '04:00', '06:00', '08:00', '10:00', '12:00',
+                '14:00', '16:00', '18:00', '20:00', '22:00'],
+            datasets: [{
+                label: '시간별 접속자 수',
+                data: /*[[${hourlyTraffic}]]*/ [65, 59, 80, 81, 56, 55, 40, 90, 120, 110, 85, 70],
+                fill: false,
+                borderColor: 'rgb(75, 192, 192)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
         }
     });
 </script>

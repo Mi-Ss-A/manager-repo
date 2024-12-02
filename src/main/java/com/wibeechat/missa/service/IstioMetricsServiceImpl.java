@@ -1,36 +1,35 @@
 package com.wibeechat.missa.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wibeechat.missa.domain.IstioMetrics;
+import com.wibeechat.missa.domain.PrometheusApi;
 import com.wibeechat.missa.domain.PrometheusResponse;
+import com.wibeechat.missa.domain.QueryResult;
 import io.fabric8.kubernetes.api.model.Endpoints;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.KubernetesClientBuilder;
 import io.fabric8.istio.api.networking.v1beta1.VirtualService;
 import io.fabric8.istio.api.networking.v1beta1.DestinationRule;
 import jakarta.annotation.PostConstruct;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.*;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import io.fabric8.istio.api.networking.v1beta1.Gateway;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.client.RestTemplate;
-
-import java.net.URLEncoder;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import org.springframework.web.util.UriComponentsBuilder;
+import org.springframework.web.util.UriUtils;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
@@ -318,13 +317,28 @@ wibee-user-server-service     ClusterIP   172.20.252.43    <none>        8081/TC
     // Prometheus 쿼리 헬퍼 메소드
     private PrometheusResponse queryPrometheus(String query) {
         try {
-            // Prometheus API 엔드포인트 설정
             String prometheusUrl = "http://prometheus.wibeechat.com";
             RestTemplate restTemplate = new RestTemplate();
+// 특수문자 처리를 위한 인코딩
+            String encodedQuery = URLEncoder.encode(query, StandardCharsets.UTF_8.toString())
+                    .replace("+", "%20")  // 공백 처리
+                    .replace("%7B", "{")  // 중괄호 처리
+                    .replace("%7D", "}")
+                    .replace("%22", "\"")
+                    .replace("%3D", "=");
 
-            // ResponseEntity를 PrometheusResponse로 직접 매핑
-            ResponseEntity<PrometheusResponse> response = restTemplate.getForEntity(
-                    prometheusUrl + "/api/v1/query?query=" + URLEncoder.encode(query, "UTF-8"),
+            String url = String.format("%s/api/v1/query?query=%s", prometheusUrl, encodedQuery);
+
+            // HTTP 요청 헤더 설정
+            HttpHeaders headers = new HttpHeaders();
+            headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
+
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            ResponseEntity<PrometheusResponse> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    entity,
                     PrometheusResponse.class
             );
 
@@ -343,34 +357,70 @@ wibee-user-server-service     ClusterIP   172.20.252.43    <none>        8081/TC
                 .collect(Collectors.joining(","));
     }
 
+    /**
+     * 서비스의 시간별 스케일링 정보를 조회합니다.
+     */
     private Map<String, Object> getScalingTimeline(String serviceName) {
         Map<String, Object> timeline = new HashMap<>();
         try {
             // 현재 시간 기준 타임라인 생성
             LocalDateTime now = LocalDateTime.now();
-            Map<String, Object> peakInfo = getPeakHourInfo(serviceName);
-            String peakHourStr = (String) peakInfo.get("peakHour");
-            int peakHour = Integer.parseInt(peakHourStr.split(":")[0]);
 
-            // 준비 상태 (피크 시간 1시간 전)
-            LocalDateTime beforeTime = now.withHour(peakHour - 1);
-            timeline.put("beforeTime", beforeTime.format(DateTimeFormatter.ofPattern("HH:mm")));
-            timeline.put("beforePods", getCurrentPodCount(serviceName));
+            // 피크 시간 정보 조회
+            int peakHour = getServicePeakHour(serviceName);
 
-            // 스케일링 중 (피크 시간)
-            LocalDateTime duringTime = now.withHour(peakHour);
-            timeline.put("duringTime", duringTime.format(DateTimeFormatter.ofPattern("HH:mm")));
-            timeline.put("duringPods", getTargetPodCount(serviceName));
-
-            // 완료 상태 (피크 시간 이후)
-            LocalDateTime afterTime = now.withHour(peakHour + 1);
-            timeline.put("afterTime", afterTime.format(DateTimeFormatter.ofPattern("HH:mm")));
-            timeline.put("afterPods", getTargetPodCount(serviceName));
+            // 피크 시간 전/중/후의 파드 상태 정보 수집
+            timeline.putAll(getBeforePeakInfo(now, peakHour, serviceName));
+            timeline.putAll(getDuringPeakInfo(now, peakHour, serviceName));
+            timeline.putAll(getAfterPeakInfo(now, peakHour, serviceName));
 
         } catch (Exception e) {
             log.error("Failed to get scaling timeline for service: {}", serviceName, e);
+            timeline.put("error", e.getMessage());
         }
         return timeline;
+    }
+
+    /**
+     * 피크 시간대를 조회합니다.
+     */
+    private int getServicePeakHour(String serviceName) throws Exception {
+        Map<String, Object> peakInfo = getPeakHourInfo(serviceName);
+        String peakHourStr = (String) peakInfo.get("peakHour");
+        return Integer.parseInt(peakHourStr.split(":")[0]);
+    }
+
+    /**
+     * 피크 시간 1시간 전 상태를 조회합니다.
+     */
+    private Map<String, Object> getBeforePeakInfo(LocalDateTime now, int peakHour, String serviceName) {
+        Map<String, Object> info = new HashMap<>();
+        LocalDateTime beforeTime = now.withHour(Math.max(0, peakHour - 1));
+        info.put("beforeTime", beforeTime.format(DateTimeFormatter.ofPattern("HH:mm")));
+        info.put("beforePods", getCurrentPodCount(serviceName));
+        return info;
+    }
+
+    /**
+     * 피크 시간 동안의 상태를 조회합니다.
+     */
+    private Map<String, Object> getDuringPeakInfo(LocalDateTime now, int peakHour, String serviceName) {
+        Map<String, Object> info = new HashMap<>();
+        LocalDateTime duringTime = now.withHour(peakHour);
+        info.put("duringTime", duringTime.format(DateTimeFormatter.ofPattern("HH:mm")));
+        info.put("duringPods", getTargetPodCount(serviceName));
+        return info;
+    }
+
+    /**
+     * 피크 시간 1시간 후 상태를 조회합니다.
+     */
+    private Map<String, Object> getAfterPeakInfo(LocalDateTime now, int peakHour, String serviceName) {
+        Map<String, Object> info = new HashMap<>();
+        LocalDateTime afterTime = now.withHour(Math.min(23, peakHour + 1));
+        info.put("afterTime", afterTime.format(DateTimeFormatter.ofPattern("HH:mm")));
+        info.put("afterPods", getTargetPodCount(serviceName));
+        return info;
     }
 
     private List<Double> get24HourTraffic(String serviceName) {

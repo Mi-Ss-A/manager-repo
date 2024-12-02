@@ -19,6 +19,11 @@ public class IstioMetrics {
     private double averageLatency;
     private int totalRequests;
     private int totalErrors;
+    private int minPods;
+    private int maxPods;
+    private int currentPods;
+    private int cpuThreshold;
+    private int memoryThreshold;
 
     public static IstioMetrics createEmpty() {
         return IstioMetrics.builder()
@@ -35,6 +40,11 @@ public class IstioMetrics {
                 .averageLatency(0.0)
                 .totalRequests(0)
                 .totalErrors(0)
+                .minPods(0)
+                .maxPods(0)
+                .currentPods(0)
+                .cpuThreshold(0)
+                .memoryThreshold(0)
                 .build();
     }
 }
