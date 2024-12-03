@@ -14,10 +14,20 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
-    public List<User> getUsersWithCustomPagination(int page, int size) {
+    public List<User> getUsersWithCustomPagination(int page, int size, boolean vipOnly) {
         int startRow = page * size;
         int endRow = startRow + size;
-        return userRepository.findUsersWithPagination(startRow, endRow);
+        
+        String vipFlag = vipOnly == true ? "V" : null;
+        return userRepository.findUsersWithPaginationAndVIPFilter(startRow, endRow, vipFlag);
+    }
+    
+    public int getTotalUsers(boolean vipOnly) {
+        if (vipOnly) {
+            return userRepository.countUsersWithVIPFilter("V");
+        } else {
+            return userRepository.countAllUsers();
+        }
     }
 
     public int getTotalUsers() {

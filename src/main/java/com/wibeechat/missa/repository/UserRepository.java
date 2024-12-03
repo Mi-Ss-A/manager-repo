@@ -10,13 +10,21 @@ import java.util.List;
 
 public interface UserRepository extends JpaRepository<User, String> {
     @Query(value = """
-            SELECT * FROM (
-                SELECT u.*, ROWNUM rnum
-                FROM wibee.user_info u
-                WHERE ROWNUM <= :endRow
-            ) WHERE rnum > :startRow
-            """, nativeQuery = true)
-    List<User> findUsersWithPagination(@Param("startRow") int startRow, @Param("endRow") int endRow);
+        SELECT * FROM (
+            SELECT u.*, ROWNUM rnum
+            FROM wibee.user_info u
+            WHERE (:vipFlag IS NULL OR u.USER_STATUS = :vipFlag)
+              AND ROWNUM <= :endRow
+        ) WHERE rnum > :startRow
+        """, nativeQuery = true)
+    List<User> findUsersWithPaginationAndVIPFilter(
+        @Param("startRow") int startRow,
+        @Param("endRow") int endRow,
+        @Param("vipFlag") String vipFlag
+    );
+
+    @Query(value = "SELECT COUNT(*) FROM wibee.user_info WHERE USER_STATUS = :vipFlag", nativeQuery = true)
+    int countUsersWithVIPFilter(@Param("vipFlag") String vipFlag);
 
     @Query(value = "SELECT COUNT(*) FROM WIBEE.user_info", nativeQuery = true)
     int countAllUsers();

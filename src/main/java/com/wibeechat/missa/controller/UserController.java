@@ -75,37 +75,38 @@ public class UserController {
     }
 
 
-    @GetMapping("/userlists")
-    public String userLists(
-            @RequestParam(value = "page", defaultValue = "0") int page,
-            @RequestParam(value = "size", defaultValue = "10") int size,
-            Model model) {
+@GetMapping("/userlists")
+public String userLists(
+        @RequestParam(value = "page", defaultValue = "0") int page,
+        @RequestParam(value = "size", defaultValue = "10") int size,
+        @RequestParam(value = "vipOnly", defaultValue = "false") boolean vipOnly,
+        Model model) {
 
-        try {
+    try {
+        // VIP 필터 적용된 유저 리스트 가져오기
+        List<User> users = userService.getUsersWithCustomPagination(page, size, vipOnly);
 
-            List<User> users = userService.getUsersWithCustomPagination(page, size);
+        // VIP 필터 적용된 전체 유저 수 가져오기
+        int totalUsers = userService.getTotalUsers(vipOnly);
+        int totalPages = (int) Math.ceil((double) totalUsers / size);
 
-            //전체 페이지수 계산
-            int totalUsers = userService.getTotalUsers(); // 총 유저 수를 가져오는 메서드
-            int totalPages = (int) Math.ceil((double) totalUsers / size);
-
-            model.addAttribute("users", users);
-            model.addAttribute("currentPage", page);
-            model.addAttribute("pageSize", size);
-            model.addAttribute("totalPages",totalPages);
-        } catch (Exception e) {
-            // 에러 로그 출력
-            System.err.println("Error fetching user list: " + e.getMessage());
-            e.printStackTrace();
-
-            // 에러 메시지를 모델에 추가
-            model.addAttribute("errorMessage", "An error occurred while loading the user list. Please try again later.");
-            model.addAttribute("users", null); // user 데이터를 초기화
-            return "error";
-        }
-
-        return "user-list"; // 템플릿 파일 이름
+        model.addAttribute("users", users);
+        model.addAttribute("currentPage", page);
+        model.addAttribute("pageSize", size);
+        model.addAttribute("totalPages", totalPages);
+        model.addAttribute("vipOnly", vipOnly); // 현재 VIP 상태 추가
+    } catch (Exception e) {
+        // 에러 처리
+        System.err.println("Error fetching user list: " + e.getMessage());
+        e.printStackTrace();
+        model.addAttribute("errorMessage", "An error occurred while loading the user list. Please try again later.");
+        model.addAttribute("users", null);
+        return "error";
     }
+
+    return "user-list";
+}
+
 
     //Get user 추가폼
     @GetMapping("/user/add")
