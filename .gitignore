@@ -27,7 +27,7 @@ gradlew
 .idea
 gradle
 gradlew.bat
-build/*
+/build/
 
 .env
 .vscode

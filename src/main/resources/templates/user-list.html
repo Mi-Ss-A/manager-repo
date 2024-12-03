@@ -26,6 +26,14 @@
 </div>
 
 <table>
+    <caption>
+        <div class="filter-container">
+            <label>
+                <input type="checkbox" id="vipFilterCheckbox" onchange="filterVIP()" th:checked="${vipOnly}">
+                <span>VIP 유저만 보기</span>                
+            </label>
+        </div>
+    </caption>
     <thead>
     <tr>
         <th>No.</th>
@@ -89,6 +97,19 @@
             button.closest("form").submit();
         }
     }
+
+    function filterVIP() {
+        const checkbox = document.getElementById("vipFilterCheckbox");
+        const isVIPOnly = checkbox.checked;
+        
+        // 현재 페이지 번호와 페이지 크기 가져오기
+        const currentPage = new URLSearchParams(window.location.search).get("page") || 0;
+        const pageSize = new URLSearchParams(window.location.search).get("size") || 10;
+    
+        // 서버로 요청 보내기 (VIP 필터 포함)
+        window.location.href = `/userlists?page=${currentPage}&size=${pageSize}&vipOnly=${isVIPOnly}`;
+    }
+    
 </script>
 </body>
 </html>
