@@ -44,7 +44,8 @@ public class UserController {
             "wibee-user-server",
             "wibee-ai-server",
             "wibee-config-server",
-            "wibee-front-end"
+            "wibee-front-end",
+            "wibee-portfolio-server"
     );
 
 
