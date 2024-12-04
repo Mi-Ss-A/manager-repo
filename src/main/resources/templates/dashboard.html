@@ -191,89 +191,6 @@
                         </div>
                     </div>
 
-                    <!-- 시간별 접속량 및 파드 자동화 관리 섹션 -->
-                    <div class="bg-white rounded-lg shadow-md mt-6">
-                        <div class="p-4 border-b">
-                            <h3 class="font-semibold">트래픽 모니터링 및 파드 자동화</h3>
-                        </div>
-                        <div class="p-4 space-y-6">
-                            <!-- 시간별 접속량 그래프 -->
-                            <div class="mb-6">
-                                <h4 class="text-lg font-medium mb-3">시간별 사용자 접속량</h4>
-                                <div class="h-64 bg-gray-50 rounded-lg p-4">
-                                    <canvas id="trafficChart"></canvas>
-                                </div>
-                            </div>
-
-                            <!-- 파드 자동 스케일링 설정 -->
-                            <div class="border-t pt-4">
-                                <h4 class="text-lg font-medium mb-3">파드 자동화 설정</h4>
-                                <div class="grid grid-cols-2 gap-4">
-                                    <!-- 자동 스케일링 규칙 -->
-                                    <div class="bg-gray-50 p-4 rounded-lg">
-                                        <h5 class="font-medium mb-2">현재 스케일링 상태</h5>
-                                        <div class="space-y-2">
-                                            <div class="flex justify-between">
-                                                <span>최소 파드 수:</span>
-                                                <span class="font-bold" th:text="${metrics.minPods}">2</span>
-                                            </div>
-                                            <div class="flex justify-between">
-                                                <span>최대 파드 수:</span>
-                                                <span class="font-bold" th:text="${metrics.maxPods}">10</span>
-                                            </div>
-                                            <div class="flex justify-between">
-                                                <span>현재 파드 수:</span>
-                                                <span class="font-bold" th:text="${metrics.currentPods}">4</span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- 스케일링 규칙 설정 -->
-                                    <div class="bg-gray-50 p-4 rounded-lg">
-                                        <h5 class="font-medium mb-2">스케일링 규칙 설정</h5>
-                                        <form class="space-y-3">
-                                            <div>
-                                                <label class="block text-sm">CPU 임계값 (%)</label>
-                                                <input type="number" class="w-full p-2 border rounded"
-                                                       th:value="${metrics.cpuThreshold}" min="0" max="100">
-                                            </div>
-                                            <div>
-                                                <label class="block text-sm">메모리 임계값 (%)</label>
-                                                <input type="number" class="w-full p-2 border rounded"
-                                                       th:value="${metrics.memoryThreshold}" min="0" max="100">
-                                            </div>
-                                            <button type="submit" class="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
-                                                설정 저장
-                                            </button>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- 자동화 로그 -->
-                            <div class="border-t pt-4">
-                                <h4 class="text-lg font-medium mb-3">자동화 로그</h4>
-                                <div class="bg-gray-50 p-4 rounded-lg h-48 overflow-y-auto">
-                                    <table class="w-full">
-                                        <thead>
-                                        <tr class="text-left">
-                                            <th class="pb-2">시간</th>
-                                            <th class="pb-2">이벤트</th>
-                                            <th class="pb-2">상태</th>
-                                        </tr>
-                                        </thead>
-                                        <tbody>
-                                        <tr th:each="log : ${automationLogs}">
-                                            <td class="py-1" th:text="${log.timestamp}">2024-11-29 14:30:00</td>
-                                            <td class="py-1" th:text="${log.event}">Scale Up 트리거</td>
-                                            <td class="py-1" th:text="${log.status}">성공</td>
-                                        </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
 
                 </div>
 
@@ -332,7 +249,7 @@
 
     <!-- 서비스 선택 드롭다운 -->
     <div class="w-full mb-6">
-        <select
+        <label for="serviceSelector"></label><select
                 id="serviceSelector"
                 class="w-full md:w-64 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                 onchange="updateServiceMetrics(this.value)"
@@ -342,6 +259,52 @@
                     th:value="${svc}"
                     th:text="${svc}">서비스명</option>
         </select>
+        <script th:inline="javascript">
+            function updateServiceMetrics(selectedService) {
+                // 모든 메트릭스 숨기기
+                document.querySelectorAll('[id^="metrics-"]').forEach(element => {
+                    element.style.display = 'none';
+                });
+
+                // 선택된 서비스의 메트릭스만 표시
+                if (selectedService) {
+                    const selectedMetrics = document.getElementById('metrics-' + selectedService);
+                    if (selectedMetrics) {
+                        selectedMetrics.style.display = 'block';
+                    }
+                }
+            }
+
+            // 페이지 로드 시 차트 초기화
+            window.addEventListener('load', function() {
+                const services = [[${SERVICE_NAMES}]];
+                services.forEach(service => {
+                    const ctx = document.getElementById('trafficChart-' + service).getContext('2d');
+                    const trafficData = [[${metricsistio['hourlyTraffic']}]][service] || [];
+                    new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: Array.from({length: 24}, (_, i) => `${i}:00`),
+                            datasets: [{
+                                label: '트래픽 (RPS)',
+                                data: trafficData,
+                                borderColor: 'rgb(59, 130, 246)',
+                                tension: 0.1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    beginAtZero: true
+                                }
+                            }
+                        }
+                    });
+                });
+            });
+        </script>
     </div>
 
     <!-- 서비스 메트릭스 섹션 -->
@@ -358,43 +321,6 @@
                 <p class="text-2xl font-bold text-green-800"
                    th:text="${metricsistio['peakTraffic'].get(service)} + ' RPS'">1200 RPS</p>
             </div>
-            <div class="bg-purple-50 p-4 rounded-lg">
-                <h3 class="font-semibold text-purple-700 mb-2">필요 Pod 수</h3>
-                <p class="text-2xl font-bold text-purple-800"
-                   th:text="${metricsistio['requiredPods'].get(service)}">5</p>
-            </div>
-        </div>
-
-        <!-- 스케일링 상태 타임라인 -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div class="bg-gray-50 p-4 rounded-lg">
-                <h3 class="font-semibold text-gray-700 mb-2">이전 상태</h3>
-                <div class="flex justify-between items-center">
-                    <p class="text-sm text-gray-600"
-                       th:text="${metricsistio['scalingTimeline'].get(service).get('beforeTime')}">13:00</p>
-                    <p class="text-xl font-bold text-gray-800"
-                       th:text="${metricsistio['scalingTimeline'].get(service).get('beforePods')} + ' pods'">2 pods</p>
-                </div>
-            </div>
-
-            <div class="bg-blue-50 p-4 rounded-lg">
-                <h3 class="font-semibold text-blue-700 mb-2">현재 상태</h3>
-                <div class="flex justify-between items-center">
-                    <p class="text-sm text-blue-600"
-                       th:text="${metricsistio['scalingTimeline'].get(service).get('currentTime')}">14:00</p>
-                    <p class="text-xl font-bold text-blue-800"
-                       th:text="${metricsistio['scalingTimeline'].get(service).get('currentPods')} + ' pods'">3 pods</p>
-                </div>
-            </div>
-
-            <div class="bg-green-50 p-4 rounded-lg">
-                <h3 class="font-semibold text-green-700 mb-2">예상 필요 상태</h3>
-                <div class="flex justify-between items-center">
-                    <p class="text-sm text-green-600">예상</p>
-                    <p class="text-xl font-bold text-green-800"
-                       th:text="${metricsistio['scalingTimeline'].get(service).get('expectedPods')} + ' pods'">4 pods</p>
-                </div>
-            </div>
         </div>
 
         <!-- 트래픽 차트 -->
@@ -407,57 +333,11 @@
     </div>
 
     <!-- 서비스 선택에 따른 메트릭스 표시 제어를 위한 JavaScript -->
-    <script th:inline="javascript">
-        function updateServiceMetrics(selectedService) {
-            // 모든 메트릭스 숨기기
-            document.querySelectorAll('[id^="metrics-"]').forEach(element => {
-                element.style.display = 'none';
-            });
 
-            // 선택된 서비스의 메트릭스만 표시
-            if (selectedService) {
-                const selectedMetrics = document.getElementById('metrics-' + selectedService);
-                if (selectedMetrics) {
-                    selectedMetrics.style.display = 'block';
-                }
-            }
-        }
-
-        // 페이지 로드 시 차트 초기화
-        window.addEventListener('load', function() {
-            const services = [[${SERVICE_NAMES}]];
-            services.forEach(service => {
-                const ctx = document.getElementById('trafficChart-' + service).getContext('2d');
-                const trafficData = [[${metricsistio['hourlyTraffic']}]][service] || [];
-                new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: Array.from({length: 24}, (_, i) => `${i}:00`),
-                        datasets: [{
-                            label: '트래픽 (RPS)',
-                            data: trafficData,
-                            borderColor: 'rgb(59, 130, 246)',
-                            tension: 0.1
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            y: {
-                                beginAtZero: true
-                            }
-                        }
-                    }
-                });
-            });
-        });
-    </script>
     <!-- 푸터 -->
     <div class="mt-8 text-center text-gray-600">
         <p>© 2024 통합 관리자 대시보드 | Powered by WibeeChat</p>
     </div>
-</div>
 </div>
 </div>
 

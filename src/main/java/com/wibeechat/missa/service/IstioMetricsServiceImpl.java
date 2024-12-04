@@ -1,9 +1,6 @@
 package com.wibeechat.missa.service;
 
-import com.wibeechat.missa.domain.IstioMetrics;
-import com.wibeechat.missa.domain.PrometheusApi;
-import com.wibeechat.missa.domain.PrometheusResponse;
-import com.wibeechat.missa.domain.QueryResult;
+import com.wibeechat.missa.domain.*;
 import io.fabric8.kubernetes.api.model.Endpoints;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.istio.api.networking.v1beta1.VirtualService;
@@ -30,6 +27,9 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
+import static com.wibeechat.missa.controller.UserController.SERVICE_NAMES;
 
 @RequiredArgsConstructor
 @Service
@@ -45,12 +45,7 @@ wibee-config-server-service   ClusterIP   172.20.135.47    <none>        9000/TC
 wibee-front-end-service       ClusterIP   172.20.251.137   <none>        80/TCP     136m
 wibee-user-server-service     ClusterIP   172.20.252.43    <none>        8081/TCP   43h
      */
-    private static final List<String> SERVICE_NAMES = Arrays.asList(
-            "wibee-user-server-service",
-            "wibee-ai-server-service",
-            "wibee-config-server-service",
-            "wibee-front-end-service"
-    );
+
 
     // 시간대별 트래픽 데이터를 저장할 구조
     private final Map<Integer, Map<String, TrafficPattern>> hourlyTrafficPatterns = new HashMap<>();
@@ -75,35 +70,22 @@ wibee-user-server-service     ClusterIP   172.20.252.43    <none>        8081/TC
             // 피크 시간 정보
             Map<String, String> peakHours = new HashMap<>();
             Map<String, Double> peakTraffic = new HashMap<>();
-            Map<String, Integer> requiredPods = new HashMap<>();
-
-            // 스케일링 타임라인
-            Map<String, Map<String, Object>> scalingTimeline = new HashMap<>();
-
             // 시간별 트래픽
             Map<String, List<Double>> hourlyTraffic = new HashMap<>();
 
             // 각 서비스별 메트릭 수집
             for (String serviceName : SERVICE_NAMES) {
-                // 피크 시간 정보 수집
-                Map<String, Object> peakInfo = getPeakHourInfo(serviceName);
-                peakHours.put(serviceName, (String) peakInfo.get("peakHour"));
-                peakTraffic.put(serviceName, (Double) peakInfo.get("peakTraffic"));
-                requiredPods.put(serviceName, calculateRequiredPods(serviceName));
-
-                // 스케일링 타임라인 정보
-                Map<String, Object> timeline = getScalingTimeline(serviceName);
-                scalingTimeline.put(serviceName, timeline);
 
                 // 24시간 트래픽 데이터
-                hourlyTraffic.put(serviceName, get24HourTraffic(serviceName));
+                List<Double> traffic = get24HourTraffic(serviceName);
+                hourlyTraffic.put(serviceName, traffic);
+                peakHours.put(serviceName, (String)getPeakhours(traffic).get("peakHour"));
+                peakTraffic.put(serviceName, (Double)getPeakhours(traffic).get("peakTraffic"));
             }
 
             // 수집된 모든 메트릭 저장
             allMetrics.put("peakHours", peakHours);
             allMetrics.put("peakTraffic", peakTraffic);
-            allMetrics.put("requiredPods", requiredPods);
-            allMetrics.put("scalingTimeline", scalingTimeline);
             allMetrics.put("hourlyTraffic", hourlyTraffic);
 
         } catch (Exception e) {
@@ -113,6 +95,25 @@ wibee-user-server-service     ClusterIP   172.20.252.43    <none>        8081/TC
         return allMetrics;
     }
 
+    public Map<String, Object> getPeakhours(List<Double> traffic){
+        Map<String, Object> map = new HashMap<>();
+        Optional<Map.Entry<Integer, Double>> peakEntry = IntStream.range(0, traffic.size())
+                .boxed()
+                .map(i -> Map.entry(i, traffic.get(i)))
+                .max(Map.Entry.comparingByValue());
+
+        // 결과 추출 (데이터가 없는 경우 기본값 0 사용)
+        int peakHour = peakEntry.map(Map.Entry::getKey).orElse(0);
+        double peakTraffic = peakEntry.map(Map.Entry::getValue).orElse(0.0);
+
+        // 시간 포맷팅 (HH:00 형식)
+        String formattedHour = String.format("%02d:00", peakHour);
+
+        map.put("peakHour", formattedHour);
+        map.put("peakTraffic", peakTraffic);
+
+        return map;
+    }
 
     @Override
     public IstioMetrics getIstioMetrics() {
@@ -237,6 +238,10 @@ wibee-user-server-service     ClusterIP   172.20.252.43    <none>        8081/TC
                     .list()
                     .getItems();
 
+            List<io.fabric8.kubernetes.api.model.Service> filteredServices = services.stream()
+                    .filter(service -> SERVICE_NAMES.contains(service.getMetadata().getName()))
+                    .collect(Collectors.toList());
+
             // 2. 서비스 상태 확인
             int healthyCount = 0;
             int unhealthyCount = 0;
@@ -244,7 +249,7 @@ wibee-user-server-service     ClusterIP   172.20.252.43    <none>        8081/TC
             int totalErrors = 0;
             double totalLatency = 0.0;
 
-            for (io.fabric8.kubernetes.api.model.Service service : services) {
+            for (io.fabric8.kubernetes.api.model.Service service : filteredServices) {
                 try {
                     // 서비스의 엔드포인트 조회
                     Endpoints endpoints = kubernetesClient.endpoints()
@@ -314,29 +319,22 @@ wibee-user-server-service     ClusterIP   172.20.252.43    <none>        8081/TC
         }
     }
 
-    // Prometheus 쿼리 헬퍼 메소드
     private PrometheusResponse queryPrometheus(String query) {
         try {
-            String prometheusUrl = "http://prometheus.wibeechat.com";
+            String prometheusUrl = "http://prometheus.wibeechat.com/api/v1/query";
             RestTemplate restTemplate = new RestTemplate();
-// 특수문자 처리를 위한 인코딩
-            String encodedQuery = URLEncoder.encode(query, StandardCharsets.UTF_8.toString())
-                    .replace("+", "%20")  // 공백 처리
-                    .replace("%7B", "{")  // 중괄호 처리
-                    .replace("%7D", "}")
-                    .replace("%22", "\"")
-                    .replace("%3D", "=");
 
-            String url = String.format("%s/api/v1/query?query=%s", prometheusUrl, encodedQuery);
+            // 쿼리 파라미터 수동 인코딩
+            String encodedQuery = URLEncoder.encode(query, StandardCharsets.UTF_8.toString());
 
-            // HTTP 요청 헤더 설정
+            URI uri = new URI(prometheusUrl + "?query=" + encodedQuery);
+
             HttpHeaders headers = new HttpHeaders();
-            headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
-
+            headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             ResponseEntity<PrometheusResponse> response = restTemplate.exchange(
-                    url,
+                    uri,
                     HttpMethod.GET,
                     entity,
                     PrometheusResponse.class
@@ -357,38 +355,7 @@ wibee-user-server-service     ClusterIP   172.20.252.43    <none>        8081/TC
                 .collect(Collectors.joining(","));
     }
 
-    /**
-     * 서비스의 시간별 스케일링 정보를 조회합니다.
-     */
-    private Map<String, Object> getScalingTimeline(String serviceName) {
-        Map<String, Object> timeline = new HashMap<>();
-        try {
-            // 현재 시간 기준 타임라인 생성
-            LocalDateTime now = LocalDateTime.now();
 
-            // 피크 시간 정보 조회
-            int peakHour = getServicePeakHour(serviceName);
-
-            // 피크 시간 전/중/후의 파드 상태 정보 수집
-            timeline.putAll(getBeforePeakInfo(now, peakHour, serviceName));
-            timeline.putAll(getDuringPeakInfo(now, peakHour, serviceName));
-            timeline.putAll(getAfterPeakInfo(now, peakHour, serviceName));
-
-        } catch (Exception e) {
-            log.error("Failed to get scaling timeline for service: {}", serviceName, e);
-            timeline.put("error", e.getMessage());
-        }
-        return timeline;
-    }
-
-    /**
-     * 피크 시간대를 조회합니다.
-     */
-    private int getServicePeakHour(String serviceName) throws Exception {
-        Map<String, Object> peakInfo = getPeakHourInfo(serviceName);
-        String peakHourStr = (String) peakInfo.get("peakHour");
-        return Integer.parseInt(peakHourStr.split(":")[0]);
-    }
 
     /**
      * 피크 시간 1시간 전 상태를 조회합니다.
@@ -401,32 +368,14 @@ wibee-user-server-service     ClusterIP   172.20.252.43    <none>        8081/TC
         return info;
     }
 
-    /**
-     * 피크 시간 동안의 상태를 조회합니다.
-     */
-    private Map<String, Object> getDuringPeakInfo(LocalDateTime now, int peakHour, String serviceName) {
-        Map<String, Object> info = new HashMap<>();
-        LocalDateTime duringTime = now.withHour(peakHour);
-        info.put("duringTime", duringTime.format(DateTimeFormatter.ofPattern("HH:mm")));
-        info.put("duringPods", getTargetPodCount(serviceName));
-        return info;
-    }
-
-    /**
-     * 피크 시간 1시간 후 상태를 조회합니다.
-     */
-    private Map<String, Object> getAfterPeakInfo(LocalDateTime now, int peakHour, String serviceName) {
-        Map<String, Object> info = new HashMap<>();
-        LocalDateTime afterTime = now.withHour(Math.min(23, peakHour + 1));
-        info.put("afterTime", afterTime.format(DateTimeFormatter.ofPattern("HH:mm")));
-        info.put("afterPods", getTargetPodCount(serviceName));
-        return info;
-    }
 
     private List<Double> get24HourTraffic(String serviceName) {
         List<Double> hourlyData = new ArrayList<>();
         try {
-            // 현재 시간 기준으로 단순 쿼리 실행
+            long endTime = System.currentTimeMillis() / 1000;  // 현재 시간
+            long startTime = endTime - (24 * 3600);  // 24시간 전
+            int stepSeconds = 3600;  // 1시간 단위
+
             String query = String.format(
                     "sum(rate(istio_requests_total{" +
                             "destination_workload=\"%s\"," +
@@ -435,24 +384,24 @@ wibee-user-server-service     ClusterIP   172.20.252.43    <none>        8081/TC
                     serviceName, NAMESPACE
             );
 
-            log.info("Executing query for service {}: {}", serviceName, query);
+            log.info("Executing query_range for service {}: {}", serviceName, query);
 
             try {
-                QueryResult result = prometheusApi.query(query);
-                // 현재 값을 24시간 데이터로 복제 (임시 방편)
-                for (int i = 0; i < 24; i++) {
-                    hourlyData.add(result.getValue());
-                }
-            } catch (Exception e) {
-                log.warn("Failed to get traffic data, using 0.0");
-                // 에러시 0으로 채움
-                for (int i = 0; i < 24; i++) {
+                // query_range API 사용
+
+                RangeQueryResult result = prometheusApi.rangeQueryResult(query, startTime, endTime, stepSeconds);
+                hourlyData = result.getValues();
+
+                // 데이터가 24개가 아닌 경우 부족한 만큼 0.0으로 채움
+                while (hourlyData.size() < 24) {
                     hourlyData.add(0.0);
                 }
+            } catch (Exception e) {
+                log.warn("Failed to get traffic data, using 0.0: {}", e.getMessage());
+                hourlyData = new ArrayList<>(Collections.nCopies(24, 0.0));
             }
         } catch (Exception e) {
             log.error("Failed to get 24-hour traffic data for service: {}", serviceName, e);
-            // 에러 발생시 0으로 채운 24시간 데이터 반환
             hourlyData = new ArrayList<>(Collections.nCopies(24, 0.0));
         }
         return hourlyData;
@@ -483,16 +432,6 @@ wibee-user-server-service     ClusterIP   172.20.252.43    <none>        8081/TC
         }
     }
 
-    private int getTargetPodCount(String serviceName) {
-        try {
-            double peakTraffic = (Double) getPeakHourInfo(serviceName).get("peakTraffic");
-            return calculateRequiredPods(peakTraffic);
-        } catch (Exception e) {
-            log.error("Failed to get target pod count for service: {}", serviceName, e);
-            return 0;
-        }
-    }
-
     private int calculateRequiredPods(double traffic) {
         // 기본 설정
         double trafficPerPod = 100.0; // 각 Pod가 처리할 수 있는 초당 요청 수
@@ -514,56 +453,6 @@ wibee-user-server-service     ClusterIP   172.20.252.43    <none>        8081/TC
             log.error("Failed to calculate required pods for service: {}", serviceName, e);
             return 1;
         }
-    }
-
-    public Map<String, Object> getPeakHourInfo(String serviceName) {
-        Map<String, Object> peakInfo = new HashMap<>();
-        try {
-            // 현재 트래픽 상태를 조회하는 쿼리
-            String query = String.format(
-                    "sum(rate(istio_requests_total{" +
-                            "destination_workload=\"%s\"," +
-                            "destination_workload_namespace=\"%s\"" +
-                            "}[5m])) [24h:1h]",
-                    serviceName, NAMESPACE
-            );
-
-            log.debug("Executing peak traffic query for {}: {}", serviceName, query);
-            // 각 시간대별 트래픽 데이터 수집
-            Map<Integer, Double> hourlyTraffic = new HashMap<>();
-            for (int hour = 0; hour < 24; hour++) {
-                String hourlyQuery = String.format(
-                        "sum(rate(istio_requests_total{" +
-                                "destination_workload=\"%s\"," +
-                                "destination_workload_namespace=\"%s\"" +
-                                "}[5m]))",
-                        serviceName, NAMESPACE
-                );
-
-                QueryResult result = prometheusApi.query(hourlyQuery);
-                hourlyTraffic.put(hour, result.getValue());
-            }
-
-            // 피크 시간 찾기
-            Map.Entry<Integer, Double> peakEntry = hourlyTraffic.entrySet()
-                    .stream()
-                    .max(Map.Entry.comparingByValue())
-                    .orElse(Map.entry(0, 0.0));
-
-            int peakHour = peakEntry.getKey();
-            double peakTraffic = peakEntry.getValue();
-
-            peakInfo.put("peakHour", String.format("%02d:00", peakHour));
-            peakInfo.put("peakTraffic", peakTraffic);
-            peakInfo.put("hourlyTraffic", hourlyTraffic);
-
-        } catch (Exception e) {
-            log.error("Failed to get peak hour info for service: {}", serviceName, e);
-            peakInfo.put("peakHour", "00:00");
-            peakInfo.put("peakTraffic", 0.0);
-        }
-
-        return peakInfo;
     }
 
     public double getCurrentTraffic(String serviceName) throws IOException {

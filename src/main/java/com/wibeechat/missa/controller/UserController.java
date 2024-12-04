@@ -1,8 +1,7 @@
 package com.wibeechat.missa.controller;
 
 import java.security.Principal;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,7 +15,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.Arrays;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wibeechat.missa.domain.IstioMetrics;
 import com.wibeechat.missa.entity.User;
@@ -42,19 +40,19 @@ public class UserController {
 
 
 
-    private static final List<String> SERVICE_NAMES = Arrays.asList(
-            "wibee-user-server-service",
-            "wibee-ai-server-service",
-            "wibee-config-server-service",
-            "wibee-front-end-service"
+    public static final List<String> SERVICE_NAMES = Arrays.asList(
+            "wibee-user-server",
+            "wibee-ai-server",
+            "wibee-config-server",
+            "wibee-front-end"
     );
 
 
     @GetMapping("/admin")
     public String adminPage(Model model, Principal principal) {
         try {
+            // OpenAI 사용량 데이터
             List<UsageData> weeklyUsageData = openAIService.getWeeklyUsageData();
-            // null 체크 및 빈 리스트 처리
             if (weeklyUsageData == null) {
                 weeklyUsageData = new ArrayList<>();
             }
@@ -67,10 +65,26 @@ public class UserController {
             }
 
             model.addAttribute("weeklyUsageData", weeklyUsageData);
+
+            // Istio 메트릭
             IstioMetrics metrics = istioMetricsService.getIstioMetrics();
+            if (metrics == null) {
+                metrics = new IstioMetrics();
+            }
             model.addAttribute("metrics", metrics);
+
+            // 서비스 이름 목록
             model.addAttribute("SERVICE_NAMES", SERVICE_NAMES);
-            model.addAttribute("metricsistio", istioMetricsService.getAllMetrics());
+
+            // Istio 세부 메트릭 초기화
+            Map<String, Object> metricsistio = istioMetricsService.getAllMetrics();
+            if (metricsistio == null) {
+                metricsistio = new HashMap<>();
+                metricsistio.put("peakHours", new HashMap<>());
+                metricsistio.put("peakTraffic", new HashMap<>());
+                metricsistio.put("hourlyTraffic", new HashMap<>());
+            }
+            model.addAttribute("metricsistio", metricsistio);
             model.addAttribute("error", null);
 
             // 현재 사용자 이름
@@ -79,7 +93,8 @@ public class UserController {
             e.printStackTrace(); // 예외 출력
             model.addAttribute("weeklyUsageData", new ArrayList<>()); //빈 객체 전달
             model.addAttribute("metrics", new IstioMetrics());
-            model.addAttribute("error", "Failed to fetch Istio metrics: " + e.getMessage());
+            model.addAttribute("metricsistio", new HashMap<>());
+            model.addAttribute("error", "Failed to fetch data: " + e.getMessage());
         }
         return "dashboard";
     }
