@@ -216,3 +216,21 @@ button.btn:active {
 /* .btn-gray:active{
     background-color: #898989 !important;
 } */
+
+.filter-container {
+    margin-bottom: 10px;
+    text-align: left; /* 왼쪽 정렬 */
+    padding-left: 20px; /* 테이블과의 간격 조정 */
+    font-size: 1rem;
+    input {
+        width: 2%;
+    }
+    span {
+        width: 90%;
+    }
+}
+
+.filter-container label {
+    display: flex;
+    gap: 3px; /* 체크박스와 텍스트 사이 간격 */
+}
