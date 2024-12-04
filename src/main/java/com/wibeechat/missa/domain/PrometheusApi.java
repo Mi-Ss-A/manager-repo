@@ -100,7 +100,7 @@ public class PrometheusApi {
         return new QueryResult(Collections.singletonList(0.0));
     }
 
-    public RangeQueryResult rangeQuery(String promQl, long startTime, long endTime, long stepSeconds) throws IOException {
+    public RangeQueryResult rangeQueryResult(String promQl, long startTime, long endTime, long stepSeconds) throws IOException {
         String encodedQuery = URLEncoder.encode(promQl, StandardCharsets.UTF_8);
         String url = String.format("%s/api/v1/query_range?query=%s&start=%d&end=%d&step=%d",
                 prometheusUrl, encodedQuery, startTime, endTime, stepSeconds);
