@@ -7,6 +7,10 @@
 </head>
 <body>
 <h1>유저 추가</h1>
+<div class="button-container">
+    <a href="/admin" class="btn">Admin 홈으로 가기</a>
+    <a href="/userlists" class="btn">모든 유저 보기</a>
+</div>
 <form th:action="@{/user/add}" method="post">
     <div class="form-group">
         <label for="userId">USER_ID</label>

@@ -54,7 +54,7 @@ public class LoanInfoController {
     }
 
     //대출 상품 정보삭제
-    @PostMapping("/loans/delete")
+    @PostMapping("/loan/delete")
     public String deleteLoan(@RequestParam(value = "loanId") String loanId, RedirectAttributes redirectAttributes) {
         try {
             loanInfoService.deleteLoanById(loanId);
@@ -66,13 +66,13 @@ public class LoanInfoController {
     }
 
     //대출상품 추가
-    @GetMapping("/loans/add")
+    @GetMapping("/loan/add")
     public String showAddLoanForm(Model model) {
         model.addAttribute("loanInfo", new LoanInfo()); // 빈 LoanInfo 객체
         return "loan-add"; // 추가 폼 템플릿 이름
     }
 
-    @PostMapping("/loans/add")
+    @PostMapping("/loan/add")
     public String addLoan(@ModelAttribute LoanInfo loanInfo, RedirectAttributes redirectAttributes) {
         try {
                 loanInfoService.addLoan(loanInfo);

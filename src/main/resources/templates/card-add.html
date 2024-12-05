@@ -7,6 +7,10 @@
 </head>
 <body>
 <h1>카드 상품 추가</h1>
+<div class="button-container">
+    <a href="/admin" class="btn">Admin 홈으로 가기</a>
+    <a href="/cards" class="btn">모든 카드 보기</a>
+</div>
 <form th:action="@{/card/add}" method="post">
     <div class="form-group">
         <label for="cardType">Card Type</label>
