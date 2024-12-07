@@ -52,7 +52,7 @@
     </thead>
     <tbody>
     <tr th:if="${users.empty}">
-        <td colspan="3">No users available.</td>
+        <td colspan="11">No users available.</td>
     </tr>
     <tr th:each="user,loopStat : ${users}">
         <td th:text="${currentPage != null && pageSize != null ? (currentPage * pageSize + loopStat.index + 1) : loopStat.index + 1}"></td>
@@ -77,18 +77,18 @@
 
 <div class="pagination">
     <!-- Previous 버튼 -->
-    <a th:href="@{/userlists(page=${currentPage - 1}, size=${pageSize})}" th:if="${currentPage > 0}">Previous</a>
+    <a th:href="@{/userlists(page=${currentPage - 1}, size=${pageSize}, vipOnly=${vipOnly})}" th:if="${currentPage > 0}">Previous</a>
 
     <!-- 페이지 번호 표시 -->
     <span th:each="i : ${#numbers.sequence((currentPage - 5 > 0 ? currentPage - 5 : 0),
                                             (currentPage + 5 < totalPages - 1 ? currentPage + 5 : totalPages - 1))}">
-        <a th:href="@{/userlists(page=${i}, size=${pageSize})}"
+        <a th:href="@{/userlists(page=${i}, size=${pageSize}, vipOnly=${vipOnly})}"
            th:text="${i + 1}"
            th:classappend="${currentPage == i} ? 'active' : ''"></a>
     </span>
 
     <!-- Next 버튼 -->
-    <a th:href="@{/userlists(page=${currentPage + 1}, size=${pageSize})}" th:if="${currentPage + 1 < totalPages}">Next</a>
+    <a th:href="@{/userlists(page=${currentPage + 1}, size=${pageSize}, vipOnly=${vipOnly})}" th:if="${currentPage + 1 < totalPages}">Next</a>
 </div>
 <script>
     function confirmDelete(button) {
@@ -101,15 +101,15 @@
     function filterVIP() {
         const checkbox = document.getElementById("vipFilterCheckbox");
         const isVIPOnly = checkbox.checked;
-        
+
         // 현재 페이지 번호와 페이지 크기 가져오기
-        const currentPage = new URLSearchParams(window.location.search).get("page") || 0;
-        const pageSize = new URLSearchParams(window.location.search).get("size") || 10;
-    
-        // 서버로 요청 보내기 (VIP 필터 포함)
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentPage = urlParams.get("page") || 0;
+        const pageSize = urlParams.get("size") || 10;
+
+        // VIP 필터 상태를 포함하여 URL 변경
         window.location.href = `/userlists?page=${currentPage}&size=${pageSize}&vipOnly=${isVIPOnly}`;
     }
-    
 </script>
 </body>
 </html>
