@@ -1,0 +1,14 @@
+# Gradle specific files
+.gradle
+/build
+/out
+
+# IntelliJ specific files
+*.iml
+.idea
+
+# OS generated files
+.DS_Store
+
+# Logs
+*.log
