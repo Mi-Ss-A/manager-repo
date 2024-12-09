@@ -28,6 +28,7 @@ gradlew
 gradle
 gradlew.bat
 /build/
+/bin/
 
 .env
 .vscode

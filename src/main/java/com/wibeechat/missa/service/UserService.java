@@ -3,6 +3,9 @@ package com.wibeechat.missa.service;
 import com.wibeechat.missa.entity.FundInfo;
 import com.wibeechat.missa.entity.User;
 import com.wibeechat.missa.repository.UserRepository;
+
+import jakarta.transaction.Transactional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -34,9 +37,11 @@ public class UserService {
         return userRepository.countAllUsers();
 
     }
+    
+    @Transactional
     public void deleteUserById(String userNo) {
         if (userRepository.existsById(userNo)) {
-            userRepository.deleteById(userNo);
+            userRepository.updateStatusToDeleted(userNo);
         } else {
             throw new IllegalArgumentException("user with NUMBER ->  " + userNo + " does not exist.");
         }
